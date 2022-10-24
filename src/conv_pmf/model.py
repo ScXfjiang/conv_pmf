@@ -21,7 +21,7 @@ class ConvPMF(nn.Module):
             bias=False,
         )
         self.tanh = nn.Tanh()
-        self.softmax = nn.Softmax(dim=-1)
+        self.softmax_last_dim = nn.Softmax(dim=-1)
         self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True,)
         self.rating_mean = rating_mean
         self.rating_std = rating_std
@@ -49,7 +49,7 @@ class ConvPMF(nn.Module):
             )
             item_embeds.append(item_embed)
             if with_entropy:
-                prob_dist = self.softmax(
+                prob_dist = self.softmax_last_dim(
                     torch.reshape(
                         unnormalized_feature_map,
                         (-1, unnormalized_feature_map.shape[-1]),
