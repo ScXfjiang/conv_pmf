@@ -145,6 +145,7 @@ def main():
     parser.add_argument("--dataset_type", default="", type=str)
     parser.add_argument("--train_dataset_path", default="", type=str)
     parser.add_argument("--val_dataset_path", default="", type=str)
+    parser.add_argument("--test_dataset_path", default="", type=str)
     parser.add_argument("--word_embeds_type", default="", type=str)
     parser.add_argument("--word_embeds_path", default="", type=str)
     parser.add_argument("--global_user_id2global_user_idx", default="", type=str)
@@ -215,13 +216,19 @@ def main():
     DatasetT = get_dataset_type(args.dataset_type)
     train_set = DatasetT(
         args.train_dataset_path,
+        args.val_dataset_path,
+        args.test_dataset_path,
+        "train",
         dictionary,
         args.n_word,
         global_user_id2global_user_idx,
         global_item_id2global_item_idx,
     )
     val_set = DatasetT(
+        args.train_dataset_path,
         args.val_dataset_path,
+        args.test_dataset_path,
+        "val",
         dictionary,
         args.n_word,
         global_user_id2global_user_idx,

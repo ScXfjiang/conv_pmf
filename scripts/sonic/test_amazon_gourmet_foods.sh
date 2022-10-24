@@ -19,6 +19,8 @@ DATA_PATH="/home/people/22200056/workspace/dataset/amazon/amazon_grocery_and_gou
 for LOG_DIR in Sep-10-2022-17-28-52 Sep-10-2022-17-56-25 Sep-11-2022-12-40-31 Sep-11-2022-15-57-25 Sep-11-2022-19-16-36; do
     python ../../src/test.py \
         --dataset_type="amazon_grocery_and_gourmet_foods" \
+        --test_dataset_path="${DATA_PATH}/train.json" \
+        --test_dataset_path="${DATA_PATH}/val.json" \
         --test_dataset_path="${DATA_PATH}/test.json" \
         --word_embeds_type="glove.6B.50d" \
         --word_embeds_path="/home/people/22200056/workspace/dataset/glove.6B/glove.6B.50d.txt" \
