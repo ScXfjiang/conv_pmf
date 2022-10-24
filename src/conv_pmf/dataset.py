@@ -171,8 +171,8 @@ class AmazonElectronics(Amazon):
         mode,
         dictionary,
         n_token,
-        global_user_id2global_user_idx=None,
-        global_item_id2global_item_idx=None,
+        global_user_id2global_user_idx,
+        global_item_id2global_item_idx,
     ):
         super().__init__(
             train_path,
@@ -195,8 +195,8 @@ class AmazonVideoGames(Amazon):
         mode,
         dictionary,
         n_token,
-        global_user_id2global_user_idx=None,
-        global_item_id2global_item_idx=None,
+        global_user_id2global_user_idx,
+        global_item_id2global_item_idx,
     ):
         super().__init__(
             train_path,
@@ -219,8 +219,8 @@ class AmazonGroceryAndGourmetFoods(Amazon):
         mode,
         dictionary,
         n_token,
-        global_user_id2global_user_idx=None,
-        global_item_id2global_item_idx=None,
+        global_user_id2global_user_idx,
+        global_item_id2global_item_idx,
     ):
         super().__init__(
             train_path,
