@@ -90,7 +90,9 @@ class Amazon(DatasetIf):
                 [
                     self.tokenize(text_review)
                     for text_review in list(
-                        self.train_df.drop(idx).groupby("item_id")[item_id]
+                        self.train_df.drop(idx)
+                        .groupby("item_id")
+                        .get_group(item_id)["text_review"]
                     )
                 ]
             )
@@ -100,7 +102,11 @@ class Amazon(DatasetIf):
             doc = np.array(
                 [
                     self.tokenize(text_review)
-                    for text_review in list(self.train_df.groupby("item_id")[item_id])
+                    for text_review in list(
+                        self.train_df.groupby("item_id").get_group(item_id)[
+                            "text_review"
+                        ]
+                    )
                 ]
             )
             return user_idx, doc, rating
@@ -109,7 +115,11 @@ class Amazon(DatasetIf):
             doc = np.array(
                 [
                     self.tokenize(text_review)
-                    for text_review in list(self.train_df.groupby("item_id")[item_id])
+                    for text_review in list(
+                        self.train_df.groupby("item_id").get_group(item_id)[
+                            "text_review"
+                        ]
+                    )
                 ]
             )
             return user_idx, doc, rating
