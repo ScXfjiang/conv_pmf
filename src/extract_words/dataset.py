@@ -33,10 +33,10 @@ class DatasetIf(torch.utils.data.Dataset):
     def __len__(self):
         raise NotImplementedError
 
-    def rating_mean(self):
+    def train_set_rating_mean(self):
         raise NotImplementedError
 
-    def rating_std(self):
+    def train_set_rating_std(self):
         raise NotImplementedError
 
 

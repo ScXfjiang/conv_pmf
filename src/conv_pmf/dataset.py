@@ -38,10 +38,10 @@ class DatasetIf(torch.utils.data.Dataset):
     def __len__(self):
         raise NotImplementedError
 
-    def rating_mean(self):
+    def train_set_rating_mean(self):
         raise NotImplementedError
 
-    def rating_std(self):
+    def train_set_rating_std(self):
         raise NotImplementedError
 
 
@@ -169,11 +169,11 @@ class Amazon(DatasetIf):
             tokens = tokens[: self.n_token]
         return tokens
 
-    def rating_mean(self):
-        return self.data["rating"].mean()
+    def train_set_rating_mean(self):
+        return self.train_df["rating"].mean()
 
-    def rating_std(self):
-        return self.data["rating"].std()
+    def train_set_rating_std(self):
+        return self.train_df["rating"].std()
 
 
 class AmazonElectronics(Amazon):
