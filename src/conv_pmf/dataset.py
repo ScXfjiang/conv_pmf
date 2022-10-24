@@ -82,7 +82,14 @@ class Amazon(DatasetIf):
         self.item_id2item_idx = global_item_id2global_item_idx
 
     def __getitem__(self, idx):
-        user_id, item_id, rating = self.data.iloc[idx]
+        if self.mode is "train":
+            user_id, item_id, rating, _ = self.train_df.iloc[idx]
+        elif self.mode is "val":
+            user_id, item_id, rating, _ = self.val_df.iloc[idx]
+        elif self.mode is "test":
+            user_id, item_id, rating, _ = self.test_df.iloc[idx]
+        else:
+            raise NotImplementedError
         user_idx = self.user_id2user_idx[user_id]
         if self.mode is "train":
             # train set text reviews + train set ratings
