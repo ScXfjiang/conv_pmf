@@ -86,46 +86,52 @@ class Amazon(DatasetIf):
             user_id, item_id, rating, _ = self.train_df.iloc[idx]
             user_idx = self.user_id2user_idx[user_id]
             # train set text reviews + train set ratings
-            doc = np.array(
-                [
-                    self.tokenize(text_review)
-                    for text_review in list(
-                        self.train_df.drop(idx)
-                        .groupby("item_id")
-                        .get_group(item_id)["text_review"]
-                    )
-                ]
-            )
+            groups = self.train_df.drop(idx).groupby("item_id")
+            if item_id in groups.groups.keys():
+                doc = np.array(
+                    [
+                        self.tokenize(text_review)
+                        for text_review in list(
+                            groups.get_group(item_id)["text_review"]
+                        )
+                    ]
+                )
+            else:
+                doc = np.empty((0, 128), dtype=np.int64)
             return user_idx, doc, rating
         elif self.mode == "val":
             user_id, item_id, rating, _ = self.val_df.iloc[idx]
             user_idx = self.user_id2user_idx[user_id]
             # train set text reviews + val set ratings
-            doc = np.array(
-                [
-                    self.tokenize(text_review)
-                    for text_review in list(
-                        self.train_df.groupby("item_id").get_group(item_id)[
-                            "text_review"
-                        ]
-                    )
-                ]
-            )
+            groups = self.train_df.groupby("item_id")
+            if item_id in groups.groups.keys():
+                doc = np.array(
+                    [
+                        self.tokenize(text_review)
+                        for text_review in list(
+                            groups.get_group(item_id)["text_review"]
+                        )
+                    ]
+                )
+            else:
+                doc = np.empty((0, 128), dtype=np.int64)
             return user_idx, doc, rating
         elif self.mode == "test":
             user_id, item_id, rating, _ = self.test_df.iloc[idx]
             user_idx = self.user_id2user_idx[user_id]
             # train set text reviews + test set ratings
-            doc = np.array(
-                [
-                    self.tokenize(text_review)
-                    for text_review in list(
-                        self.train_df.groupby("item_id").get_group(item_id)[
-                            "text_review"
-                        ]
-                    )
-                ]
-            )
+            groups = self.train_df.groupby("item_id")
+            if item_id in groups.groups.keys():
+                doc = np.array(
+                    [
+                        self.tokenize(text_review)
+                        for text_review in list(
+                            groups.get_group(item_id)["text_review"]
+                        )
+                    ]
+                )
+            else:
+                doc = np.empty((0, 128), dtype=np.int64)
             return user_idx, doc, rating
         else:
             raise NotImplementedError
