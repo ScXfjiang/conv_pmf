@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:2
 # specify number of tasks/cores per node required
 #SBATCH --ntasks-per-node=35
-# specify the walltime e.g 48 hours
-#SBATCH -t 48:00:00
+# specify the walltime e.g 96 hours
+#SBATCH -t 96:00:00
 
 # run from current directory
 cd $SLURM_SUBMIT_DIR
