@@ -21,7 +21,10 @@ def get_dataset_type(type):
 class DatasetIf(torch.utils.data.Dataset):
     def __init__(
         self,
-        path,
+        train_path,
+        val_path,
+        test_path,
+        mode,
         dictionary,
         n_token,
         global_user_id2global_user_idx,
