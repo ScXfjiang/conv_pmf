@@ -77,7 +77,6 @@ class Amazon(DatasetIf):
         self.n_token = n_token
         self.user_id2user_idx = global_user_id2global_user_idx
         self.item_id2item_idx = global_item_id2global_item_idx
-        self.item_idx2doc = {}
 
     def __getitem__(self, idx):
         user_id, item_id, rating = self.data.iloc[idx]
