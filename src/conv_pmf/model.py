@@ -40,8 +40,7 @@ class ConvPMF(nn.Module):
             num_entropy = 0
         for doc in docs:
             review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
-            unnormalized_feature_map = self.conv1d(review_embeds)
-            feature_map = self.tanh(unnormalized_feature_map)
+            feature_map = self.tanh(self.conv1d(review_embeds))
             item_embed = torch.mean(
                 torch.max(feature_map, dim=-1, keepdim=False).values,
                 dim=0,
@@ -50,10 +49,7 @@ class ConvPMF(nn.Module):
             item_embeds.append(item_embed)
             if with_entropy:
                 prob_dist = self.softmax_last_dim(
-                    torch.reshape(
-                        unnormalized_feature_map,
-                        (-1, unnormalized_feature_map.shape[-1]),
-                    )
+                    torch.reshape(feature_map, (-1, feature_map.shape[-1]),)
                 )
                 doc_entropy = -torch.sum(prob_dist * torch.log(prob_dist))
                 entropy_sum += doc_entropy
