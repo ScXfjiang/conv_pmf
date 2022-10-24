@@ -162,14 +162,20 @@ class Amazon(DatasetIf):
 class AmazonElectronics(Amazon):
     def __init__(
         self,
-        path,
+        train_path,
+        val_path,
+        test_path,
+        mode,
         dictionary,
         n_token,
         global_user_id2global_user_idx=None,
         global_item_id2global_item_idx=None,
     ):
         super().__init__(
-            path,
+            train_path,
+            val_path,
+            test_path,
+            mode,
             dictionary,
             n_token,
             global_user_id2global_user_idx,
@@ -180,14 +186,20 @@ class AmazonElectronics(Amazon):
 class AmazonVideoGames(Amazon):
     def __init__(
         self,
-        path,
+        train_path,
+        val_path,
+        test_path,
+        mode,
         dictionary,
         n_token,
         global_user_id2global_user_idx=None,
         global_item_id2global_item_idx=None,
     ):
         super().__init__(
-            path,
+            train_path,
+            val_path,
+            test_path,
+            mode,
             dictionary,
             n_token,
             global_user_id2global_user_idx,
@@ -198,14 +210,20 @@ class AmazonVideoGames(Amazon):
 class AmazonGroceryAndGourmetFoods(Amazon):
     def __init__(
         self,
-        path,
+        train_path,
+        val_path,
+        test_path,
+        mode,
         dictionary,
         n_token,
         global_user_id2global_user_idx=None,
         global_item_id2global_item_idx=None,
     ):
         super().__init__(
-            path,
+            train_path,
+            val_path,
+            test_path,
+            mode,
             dictionary,
             n_token,
             global_user_id2global_user_idx,
