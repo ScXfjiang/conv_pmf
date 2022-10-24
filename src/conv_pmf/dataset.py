@@ -82,7 +82,7 @@ class Amazon(DatasetIf):
         self.item_id2item_idx = global_item_id2global_item_idx
 
     def __getitem__(self, idx):
-        if self.mode is "train":
+        if self.mode == "train":
             user_id, item_id, rating, _ = self.train_df.iloc[idx]
             user_idx = self.user_id2user_idx[user_id]
             # train set text reviews + train set ratings
@@ -97,7 +97,7 @@ class Amazon(DatasetIf):
                 ]
             )
             return user_idx, doc, rating
-        elif self.mode is "val":
+        elif self.mode == "val":
             user_id, item_id, rating, _ = self.val_df.iloc[idx]
             user_idx = self.user_id2user_idx[user_id]
             # train set text reviews + val set ratings
@@ -112,7 +112,7 @@ class Amazon(DatasetIf):
                 ]
             )
             return user_idx, doc, rating
-        elif self.mode is "test":
+        elif self.mode == "test":
             user_id, item_id, rating, _ = self.test_df.iloc[idx]
             user_idx = self.user_id2user_idx[user_id]
             # train set text reviews + test set ratings
@@ -131,11 +131,11 @@ class Amazon(DatasetIf):
             raise NotImplementedError
 
     def __len__(self):
-        if self.mode is "train":
+        if self.mode == "train":
             return self.train_df.shape[0]
-        elif self.mode is "val":
+        elif self.mode == "val":
             return self.val_df.shape[0]
-        elif self.mode is "test":
+        elif self.mode == "test":
             return self.test_df.shape[0]
         else:
             raise NotImplementedError
