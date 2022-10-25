@@ -19,7 +19,7 @@ module load cuda/11.3
 
 DATA_PATH="/ichec/work/ucd01/xfjiang/amazon/amazon_grocery_and_gourmet_foods1"
 
-for idx in 1 2 3; do
+for idx in 1; do
     for cuda_device_idx in 0 1; do
         export CUDA_VISIBLE_DEVICES=${cuda_device_idx}
         python ../../src/train.py \
