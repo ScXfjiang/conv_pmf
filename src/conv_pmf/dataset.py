@@ -71,67 +71,48 @@ class Amazon(DatasetIf):
             global_user_id2global_user_idx,
             global_item_id2global_item_idx,
         )
-        self.train_df = self.get_dataframe(train_path)
-        self.val_df = self.get_dataframe(val_path)
-        self.test_df = self.get_dataframe(test_path)
         assert mode in ["train", "val", "test"]
         self.mode = mode
         self.dictionary = dictionary
         self.n_token = n_token
         self.user_id2user_idx = global_user_id2global_user_idx
         self.item_id2item_idx = global_item_id2global_item_idx
+        self.train_df = self.get_dataframe(train_path)
+        self.val_df = self.get_dataframe(val_path)
+        self.test_df = self.get_dataframe(test_path)
 
     def __getitem__(self, idx):
         if self.mode == "train":
             user_id, item_id, rating, _ = self.train_df.iloc[idx]
             user_idx = self.user_id2user_idx[user_id]
             # train set text reviews + train set ratings
-            groups = self.train_df.drop(idx).groupby("item_id")
-            if item_id in groups.groups.keys():
-                doc = np.array(
-                    [
-                        self.tokenize(text_review)
-                        for text_review in list(
-                            groups.get_group(item_id)["text_review"]
-                        )
-                    ]
-                )
-            else:
+            # drop the current text review
+            drop = self.train_df.drop(idx)
+            df = drop[drop["item_id"] == item_id]
+            if df.shape[0] == 0:
                 doc = np.empty((0, 128), dtype=np.int64)
+            else:
+                doc = np.array(list(df["text_review"]))
             return user_idx, doc, rating
         elif self.mode == "val":
             user_id, item_id, rating, _ = self.val_df.iloc[idx]
             user_idx = self.user_id2user_idx[user_id]
             # train set text reviews + val set ratings
-            groups = self.train_df.groupby("item_id")
-            if item_id in groups.groups.keys():
-                doc = np.array(
-                    [
-                        self.tokenize(text_review)
-                        for text_review in list(
-                            groups.get_group(item_id)["text_review"]
-                        )
-                    ]
-                )
-            else:
+            df = self.train_df[self.train_df["item_id"] == item_id]
+            if df.shape[0] == 0:
                 doc = np.empty((0, 128), dtype=np.int64)
+            else:
+                doc = np.array(list(df["text_review"]))
             return user_idx, doc, rating
         elif self.mode == "test":
             user_id, item_id, rating, _ = self.test_df.iloc[idx]
             user_idx = self.user_id2user_idx[user_id]
             # train set text reviews + test set ratings
-            groups = self.train_df.groupby("item_id")
-            if item_id in groups.groups.keys():
-                doc = np.array(
-                    [
-                        self.tokenize(text_review)
-                        for text_review in list(
-                            groups.get_group(item_id)["text_review"]
-                        )
-                    ]
-                )
-            else:
+            df = self.train_df[self.train_df["item_id"] == item_id]
+            if df.shape[0] == 0:
                 doc = np.empty((0, 128), dtype=np.int64)
+            else:
+                doc = np.array(list(df["text_review"]))
             return user_idx, doc, rating
         else:
             raise NotImplementedError
@@ -155,12 +136,10 @@ class Amazon(DatasetIf):
             f.seek(0)
             for idx, line in enumerate(f):
                 js = json.loads(line)
-                df.loc[idx] = [
-                    str(js["reviewerID"]),
-                    str(js["asin"]),
-                    float(js["overall"]),
-                    str(js["reviewText"]),
-                ]
+                df.at[idx, "user_id"] = str(js["reviewerID"])
+                df.at[idx, "item_id"] = str(js["asin"])
+                df.at[idx, "rating"] = float(js["overall"])
+                df.at[idx, "text_review"] = self.tokenize(str(js["reviewText"]))
         return df
 
     def tokenize(self, text_review):
