@@ -10,8 +10,8 @@ done
 for checkpoint in ${checkpoint_files}; do
     python ../../src/test.py \
         --dataset_type="amazon_grocery_and_gourmet_foods" \
-        --test_dataset_path="${DATA_PATH}/train.json" \
-        --test_dataset_path="${DATA_PATH}/val.json" \
+        --train_dataset_path="${DATA_PATH}/train.json" \
+        --val_dataset_path="${DATA_PATH}/val.json" \
         --test_dataset_path="${DATA_PATH}/test.json" \
         --word_embeds_type="glove.6B.50d" \
         --word_embeds_path="/data/xuefei/glove.6B/glove.6B.50d.txt" \
