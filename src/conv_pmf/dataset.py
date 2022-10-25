@@ -80,42 +80,33 @@ class Amazon(DatasetIf):
         self.train_df = self.get_dataframe(train_path)
         self.val_df = self.get_dataframe(val_path)
         self.test_df = self.get_dataframe(test_path)
+        self.item_id2doc = {}
+        for item_id in self.item_id2item_idx.keys():
+            df = self.train_df[self.train_df["item_id"] == item_id]
+            if df.shape[0] == 0:
+                doc = np.empty((0, self.n_token), dtype=np.int64)
+            else:
+                doc = np.array(list(df["tokens"]))
+            self.item_id2doc[item_id] = doc
 
     def __getitem__(self, idx):
         if self.mode == "train":
-            user_id, item_id, rating, _ = self.train_df.iloc[idx]
-            user_idx = self.user_id2user_idx[user_id]
-            # train set text reviews + train set ratings
-            # drop the current text review
-            drop = self.train_df.drop(idx)
-            df = drop[drop["item_id"] == item_id]
-            if df.shape[0] == 0:
-                doc = np.empty((0, 128), dtype=np.int64)
-            else:
-                doc = np.array(list(df["text_review"]))
-            return user_idx, doc, rating
+            user_id, item_id, rating, tokens = self.train_df.iloc[idx]
+            full_doc = self.item_id2doc[item_id]
+            for idx in range(full_doc.shape[0]):
+                if (full_doc[idx] == tokens).all():
+                    doc = np.delete(full_doc, idx, axis=0)
+                    break
+            assert doc.shape[0] == full_doc.shape[0] - 1
         elif self.mode == "val":
             user_id, item_id, rating, _ = self.val_df.iloc[idx]
-            user_idx = self.user_id2user_idx[user_id]
-            # train set text reviews + val set ratings
-            df = self.train_df[self.train_df["item_id"] == item_id]
-            if df.shape[0] == 0:
-                doc = np.empty((0, 128), dtype=np.int64)
-            else:
-                doc = np.array(list(df["text_review"]))
-            return user_idx, doc, rating
+            doc = self.item_id2doc[item_id]
         elif self.mode == "test":
             user_id, item_id, rating, _ = self.test_df.iloc[idx]
-            user_idx = self.user_id2user_idx[user_id]
-            # train set text reviews + test set ratings
-            df = self.train_df[self.train_df["item_id"] == item_id]
-            if df.shape[0] == 0:
-                doc = np.empty((0, 128), dtype=np.int64)
-            else:
-                doc = np.array(list(df["text_review"]))
-            return user_idx, doc, rating
+            doc = self.item_id2doc[item_id]
         else:
             raise NotImplementedError
+        return self.user_id2user_idx[user_id], doc, rating
 
     def __len__(self):
         if self.mode == "train":
@@ -131,7 +122,7 @@ class Amazon(DatasetIf):
         with open(path, "rb") as f:
             df = pd.DataFrame(
                 index=np.arange(0, len(f.readlines())),
-                columns=["user_id", "item_id", "rating", "text_review"],
+                columns=["user_id", "item_id", "rating", "tokens"],
             )
             f.seek(0)
             for idx, line in enumerate(f):
@@ -139,7 +130,7 @@ class Amazon(DatasetIf):
                 df.at[idx, "user_id"] = str(js["reviewerID"])
                 df.at[idx, "item_id"] = str(js["asin"])
                 df.at[idx, "rating"] = float(js["overall"])
-                df.at[idx, "text_review"] = self.tokenize(str(js["reviewText"]))
+                df.at[idx, "tokens"] = self.tokenize(str(js["reviewText"]))
         return df
 
     def tokenize(self, text_review):
