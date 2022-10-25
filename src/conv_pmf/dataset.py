@@ -147,22 +147,22 @@ class Amazon(DatasetIf):
 
     def rating_mean(self):
         if self.mode == "train":
-            df = self.train_df["rating"]
+            df = self.train_df
         elif self.mode == "val":
-            df = self.val_df["rating"]
+            df = self.val_df
         elif self.mode == "test":
-            df = self.test_df["rating"]
+            df = self.test_df
         else:
             raise NotImplementedError
         return df["rating"].mean()
 
     def rating_std(self):
         if self.mode == "train":
-            df = self.train_df["rating"]
+            df = self.train_df
         elif self.mode == "val":
-            df = self.val_df["rating"]
+            df = self.val_df
         elif self.mode == "test":
-            df = self.test_df["rating"]
+            df = self.test_df
         else:
             raise NotImplementedError
         return df["rating"].std()
