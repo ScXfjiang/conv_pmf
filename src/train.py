@@ -56,6 +56,10 @@ class Trainer(object):
         checkpoint_dir = os.path.join(self.log_dir, "checkpoint")
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
+        torch.save(
+            self.model.state_dict(),
+            os.path.join(checkpoint_dir, "initialized_checkpoint.pt"),
+        )
         for epoch_idx in range(1, self.num_epoch + 1):
             train_epoch_start = time.time()
             self.train_epoch()
