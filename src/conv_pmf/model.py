@@ -4,13 +4,7 @@ import torch.nn as nn
 
 class ConvPMF(nn.Module):
     def __init__(
-        self,
-        num_user,
-        n_factor,
-        word_embeds,
-        window_size,
-        train_set_rating_mean,
-        train_set_rating_std,
+        self, num_user, n_factor, word_embeds, window_size, rating_mean, rating_std,
     ):
         super(ConvPMF, self).__init__()
         self.w_user = nn.parameter.Parameter(
@@ -29,16 +23,14 @@ class ConvPMF(nn.Module):
         self.tanh = nn.Tanh()
         self.softmax_last_dim = nn.Softmax(dim=-1)
         self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True,)
-        self.train_set_rating_mean = train_set_rating_mean
-        self.train_set_rating_std = train_set_rating_std
+        self.rating_mean = rating_mean
+        self.rating_std = rating_std
         self.init_weight()
 
     def init_weight(self):
-        nn.init.uniform_(
-            self.w_user, a=-self.train_set_rating_std, b=self.train_set_rating_std
-        )
+        nn.init.uniform_(self.w_user, a=-self.rating_std, b=self.rating_std)
         nn.init.uniform_(self.conv1d.weight, a=-1.0, b=1.0)
-        self.bias = torch.nn.Parameter(torch.tensor(self.train_set_rating_mean))
+        self.bias = torch.nn.Parameter(torch.tensor(self.rating_mean))
 
     def forward(self, user_indices, docs, with_entropy=False):
         user_embeds = torch.index_select(self.w_user, 0, user_indices)
