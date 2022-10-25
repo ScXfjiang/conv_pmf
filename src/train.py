@@ -253,8 +253,8 @@ def main():
         args.n_factor,
         word_embeds,
         args.window_size,
-        train_set.train_set_rating_mean(),
-        train_set.train_set_rating_std(),
+        train_set.rating_mean(),
+        train_set.rating_std(),
     )
     optimizer = torch.optim.SGD(
         model.parameters(),
