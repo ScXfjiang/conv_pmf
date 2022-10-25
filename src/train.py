@@ -178,6 +178,7 @@ def main():
         f.write("dataset_type: {}\n".format(args.dataset_type))
         f.write("train_dataset_path: {}\n".format(args.train_dataset_path))
         f.write("val_dataset_path: {}\n".format(args.val_dataset_path))
+        f.write("test_dataset_path: {}\n".format(args.test_dataset_path))
         f.write("word_embeds_type: {}\n".format(args.word_embeds_type))
         f.write("word_embeds_path: {}\n".format(args.word_embeds_path))
         f.write(
