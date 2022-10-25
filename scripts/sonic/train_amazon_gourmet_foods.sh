@@ -34,7 +34,7 @@ for idx in 1; do
             --shuffle=True \
             --train_batch_size=256 \
             --val_batch_size=256 \
-            --num_epoch=10 \
+            --num_epoch=60 \
             --window_size=5 \
             --n_word=128 \
             --n_factor=32 \
