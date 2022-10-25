@@ -26,7 +26,7 @@ for idx in 1; do
             --dataset_type="amazon_grocery_and_gourmet_foods" \
             --train_dataset_path="${DATA_PATH}/train.json" \
             --val_dataset_path="${DATA_PATH}/val.json" \
-            --val_dataset_path="${DATA_PATH}/test.json" \
+            --test_dataset_path="${DATA_PATH}/test.json" \
             --word_embeds_type="glove.6B.50d" \
             --word_embeds_path="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt" \
             --global_user_id2global_user_idx="${DATA_PATH}/global_user_id2global_user_idx.pkl" \
