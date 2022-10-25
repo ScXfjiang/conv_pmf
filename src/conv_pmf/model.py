@@ -14,12 +14,10 @@ class ConvPMF(nn.Module):
     ):
         super(ConvPMF, self).__init__()
         self.w_user = nn.parameter.Parameter(
-            torch.empty((num_user, n_factor)),
-            requires_grad=True,
+            torch.empty((num_user, n_factor)), requires_grad=True,
         )
         self.embedding = nn.Embedding.from_pretrained(
-            embeddings=torch.as_tensor(word_embeds.embed_matrix()),
-            freeze=False,
+            embeddings=torch.as_tensor(word_embeds.embed_matrix()), freeze=False,
         )
         self.conv1d = nn.Conv1d(
             in_channels=word_embeds.embed_dim(),
@@ -30,10 +28,7 @@ class ConvPMF(nn.Module):
         )
         self.tanh = nn.Tanh()
         self.softmax_last_dim = nn.Softmax(dim=-1)
-        self.bias = nn.parameter.Parameter(
-            torch.empty((1,)),
-            requires_grad=True,
-        )
+        self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True,)
         self.train_set_rating_mean = train_set_rating_mean
         self.train_set_rating_std = train_set_rating_std
         self.init_weight()
@@ -62,10 +57,7 @@ class ConvPMF(nn.Module):
             item_embeds.append(item_embed)
             if with_entropy:
                 prob_dist = self.softmax_last_dim(
-                    torch.reshape(
-                        feature_map,
-                        (-1, feature_map.shape[-1]),
-                    )
+                    torch.reshape(feature_map, (-1, feature_map.shape[-1]),)
                 )
                 doc_entropy = -torch.sum(prob_dist * torch.log(prob_dist))
                 entropy_sum += doc_entropy
