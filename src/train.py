@@ -120,7 +120,6 @@ class Trainer(object):
                 loss = mse
             cur_losses.append(mse)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
         self.train_loss_list.append(float(sum(cur_losses) / len(cur_losses)))
 
