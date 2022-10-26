@@ -49,6 +49,7 @@ class ConvPMF(nn.Module):
                     keepdim=True,
                 )
             else:
+                # deal with empty doc -> use self.bias as estimate rating
                 item_embed = torch.zeros(
                     (1, self.n_factor),
                     dtype=torch.float32,
