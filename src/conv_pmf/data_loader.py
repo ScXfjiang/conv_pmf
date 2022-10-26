@@ -1,5 +1,6 @@
 import torch
 
+
 def collate_fn(batch):
     user_idx_list, doc_list, gt_rating_list = tuple(zip(*batch))
     user_indices = torch.as_tensor(user_idx_list, dtype=torch.int32)

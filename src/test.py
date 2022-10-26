@@ -13,6 +13,8 @@ from common.word_embeds import get_embeds_type
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_type", default="", type=str)
+    parser.add_argument("--train_dataset_path", default="", type=str)
+    parser.add_argument("--val_dataset_path", default="", type=str)
     parser.add_argument("--test_dataset_path", default="", type=str)
     parser.add_argument("--checkpoint_path", default="", type=str)
     parser.add_argument("--word_embeds_type", default="", type=str)
@@ -37,7 +39,10 @@ def main():
         global_item_id2global_item_idx = pkl.load(f)
     DatasetT = get_dataset_type(args.dataset_type)
     test_set = DatasetT(
+        args.train_dataset_path,
+        args.val_dataset_path,
         args.test_dataset_path,
+        "test",
         dictionary,
         args.n_word,
         global_user_id2global_user_idx,

@@ -56,6 +56,10 @@ class Trainer(object):
         checkpoint_dir = os.path.join(self.log_dir, "checkpoint")
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
+        torch.save(
+            self.model.state_dict(),
+            os.path.join(checkpoint_dir, "initialized_checkpoint.pt"),
+        )
         for epoch_idx in range(1, self.num_epoch + 1):
             train_epoch_start = time.time()
             self.train_epoch()
@@ -116,7 +120,6 @@ class Trainer(object):
                 loss = mse
             cur_losses.append(mse)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
         self.train_loss_list.append(float(sum(cur_losses) / len(cur_losses)))
 
@@ -145,6 +148,7 @@ def main():
     parser.add_argument("--dataset_type", default="", type=str)
     parser.add_argument("--train_dataset_path", default="", type=str)
     parser.add_argument("--val_dataset_path", default="", type=str)
+    parser.add_argument("--test_dataset_path", default="", type=str)
     parser.add_argument("--word_embeds_type", default="", type=str)
     parser.add_argument("--word_embeds_path", default="", type=str)
     parser.add_argument("--global_user_id2global_user_idx", default="", type=str)
@@ -177,6 +181,7 @@ def main():
         f.write("dataset_type: {}\n".format(args.dataset_type))
         f.write("train_dataset_path: {}\n".format(args.train_dataset_path))
         f.write("val_dataset_path: {}\n".format(args.val_dataset_path))
+        f.write("test_dataset_path: {}\n".format(args.test_dataset_path))
         f.write("word_embeds_type: {}\n".format(args.word_embeds_type))
         f.write("word_embeds_path: {}\n".format(args.word_embeds_path))
         f.write(
@@ -215,13 +220,19 @@ def main():
     DatasetT = get_dataset_type(args.dataset_type)
     train_set = DatasetT(
         args.train_dataset_path,
+        args.val_dataset_path,
+        args.test_dataset_path,
+        "train",
         dictionary,
         args.n_word,
         global_user_id2global_user_idx,
         global_item_id2global_item_idx,
     )
     val_set = DatasetT(
+        args.train_dataset_path,
         args.val_dataset_path,
+        args.test_dataset_path,
+        "val",
         dictionary,
         args.n_word,
         global_user_id2global_user_idx,

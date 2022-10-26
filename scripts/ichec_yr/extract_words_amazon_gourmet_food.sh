@@ -14,8 +14,8 @@ cd $SLURM_SUBMIT_DIR
 
 module load cuda/11.3
 
-DATA_PATH="/ichec/work/ucd01/xfjiang/amazon/amazon_grocery_and_gourmet_foods1"
-CHECKPOINT_PATH="/ichec/work/ucd01/xfjiang/checkpoints/conv_pmf_checkpoints"
+DATA_PATH="/ichec/work/ucd01/yongru/amazon/amazon_grocery_and_gourmet_foods1"
+CHECKPOINT_PATH="/ichec/work/ucd01/yongru/checkpoints/conv_pmf_checkpoints"
 
 for ENTROPY_THRESHOLD in 4.84 4.83 4.82 4.81 4.80 4.75 4.70 4.60 4.50; do
     for LOG_DIR in Sep-03-2022-21-06-38; do
@@ -23,7 +23,7 @@ for ENTROPY_THRESHOLD in 4.84 4.83 4.82 4.81 4.80 4.75 4.70 4.60 4.50; do
             --dataset_type="amazon_grocery_and_gourmet_foods" \
             --train_dataset_path="${DATA_PATH}/train.json" \
             --word_embeds_type="glove.6B.50d" \
-            --word_embeds_path="/ichec/work/ucd01/xfjiang/glove.6B/glove.6B.50d.txt" \
+            --word_embeds_path="/ichec/work/ucd01/yongru/glove.6B/glove.6B.50d.txt" \
             --checkpoint_path="${CHECKPOINT_PATH}/conv_pmf_dataset_1/${LOG_DIR}/checkpoint/checkpoint_50.pt" \
             --batch_size=1024 \
             --window_size=5 \

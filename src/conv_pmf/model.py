@@ -20,8 +20,9 @@ class ConvPMF(nn.Module):
             padding="same",
             bias=False,
         )
+        self.n_factor = n_factor
         self.tanh = nn.Tanh()
-        self.softmax = nn.Softmax(dim=-1)
+        self.softmax_last_dim = nn.Softmax(dim=-1)
         self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True,)
         self.rating_mean = rating_mean
         self.rating_std = rating_std
@@ -39,26 +40,31 @@ class ConvPMF(nn.Module):
             entropy_sum = 0.0
             num_entropy = 0
         for doc in docs:
-            review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
-            unnormalized_feature_map = self.conv1d(review_embeds)
-            feature_map = self.tanh(unnormalized_feature_map)
-            item_embed = torch.mean(
-                torch.max(feature_map, dim=-1, keepdim=False).values,
-                dim=0,
-                keepdim=True,
-            )
-            item_embeds.append(item_embed)
-            if with_entropy:
-                prob_dist = self.softmax(
-                    torch.reshape(
-                        unnormalized_feature_map,
-                        (-1, unnormalized_feature_map.shape[-1]),
-                    )
+            if doc.shape[0] != 0:
+                review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
+                feature_map = self.tanh(self.conv1d(review_embeds))
+                item_embed = torch.mean(
+                    torch.max(feature_map, dim=-1, keepdim=False).values,
+                    dim=0,
+                    keepdim=True,
                 )
-                doc_entropy = -torch.sum(prob_dist * torch.log(prob_dist))
-                entropy_sum += doc_entropy
-                doc_num_entropy = prob_dist.shape[0]
-                num_entropy += doc_num_entropy
+                if with_entropy:
+                    prob_dist = self.softmax_last_dim(
+                        torch.reshape(feature_map, (-1, feature_map.shape[-1]),)
+                    )
+                    doc_entropy = -torch.sum(prob_dist * torch.log(prob_dist))
+                    entropy_sum += doc_entropy
+                    doc_num_entropy = prob_dist.shape[0]
+                    num_entropy += doc_num_entropy
+            else:
+                # deal with empty doc -> use self.bias as estimate rating
+                item_embed = torch.zeros(
+                    (1, self.n_factor),
+                    dtype=torch.float32,
+                    device=torch.device("cuda"),
+                    requires_grad=False,
+                )
+            item_embeds.append(item_embed)
         item_embeds = torch.cat(item_embeds, dim=0)
         estimate_ratings = torch.sum(user_embeds * item_embeds, dim=-1) + self.bias
         if with_entropy:
