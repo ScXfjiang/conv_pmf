@@ -83,10 +83,10 @@ class Amazon(DatasetIf):
         self.item_id2doc = {}
         for item_id in self.item_id2item_idx.keys():
             df = self.train_df[self.train_df["item_id"] == item_id]
-            if df.shape[0] == 0:
-                doc = np.empty((0, self.n_token), dtype=np.int64)
-            else:
+            if df.shape[0] != 0:
                 doc = np.array(list(df["tokens"]))
+            else:
+                doc = np.empty((0, self.n_token), dtype=np.int64)
             self.item_id2doc[item_id] = doc
 
     def __getitem__(self, idx):
