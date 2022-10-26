@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --job-name=conv_pmf_test
+#SBATCH --job-name=maskrcnn_test
 # speficity number of nodes
 #SBATCH -N 1
 # specify the gpu queue
