@@ -17,7 +17,7 @@ cd $SLURM_SUBMIT_DIR
 
 module load cuda/11.3
 
-DATA_PATH="/ichec/work/ucd01/xfjiang/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/ichec/work/ucd01/xfjiang/dataset/amazon/amazon_grocery_and_gourmet_foods1"
 
 for idx in 1; do
     for cuda_device_idx in 0 1; do
@@ -28,7 +28,7 @@ for idx in 1; do
             --val_dataset_path="${DATA_PATH}/val.json" \
             --test_dataset_path="${DATA_PATH}/test.json" \
             --word_embeds_type="glove.6B.50d" \
-            --word_embeds_path="/ichec/work/ucd01/xfjiang/glove.6B/glove.6B.50d.txt" \
+            --word_embeds_path="/ichec/work/ucd01/xfjiang/dataset/glove.6B/glove.6B.50d.txt" \
             --global_user_id2global_user_idx="${DATA_PATH}/global_user_id2global_user_idx.pkl" \
             --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \
             --shuffle=True \
