@@ -48,6 +48,14 @@ class ConvPMF(nn.Module):
                     dim=0,
                     keepdim=True,
                 )
+                if with_entropy:
+                    prob_dist = self.softmax_last_dim(
+                        torch.reshape(feature_map, (-1, feature_map.shape[-1]),)
+                    )
+                    doc_entropy = -torch.sum(prob_dist * torch.log(prob_dist))
+                    entropy_sum += doc_entropy
+                    doc_num_entropy = prob_dist.shape[0]
+                    num_entropy += doc_num_entropy
             else:
                 # deal with empty doc -> use self.bias as estimate rating
                 item_embed = torch.zeros(
@@ -57,14 +65,6 @@ class ConvPMF(nn.Module):
                     requires_grad=False,
                 )
             item_embeds.append(item_embed)
-            if with_entropy:
-                prob_dist = self.softmax_last_dim(
-                    torch.reshape(feature_map, (-1, feature_map.shape[-1]),)
-                )
-                doc_entropy = -torch.sum(prob_dist * torch.log(prob_dist))
-                entropy_sum += doc_entropy
-                doc_num_entropy = prob_dist.shape[0]
-                num_entropy += doc_num_entropy
         item_embeds = torch.cat(item_embeds, dim=0)
         estimate_ratings = torch.sum(user_embeds * item_embeds, dim=-1) + self.bias
         if with_entropy:
