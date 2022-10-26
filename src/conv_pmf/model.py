@@ -20,6 +20,7 @@ class ConvPMF(nn.Module):
             padding="same",
             bias=False,
         )
+        self.n_factor = n_factor
         self.tanh = nn.Tanh()
         self.softmax_last_dim = nn.Softmax(dim=-1)
         self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True,)
@@ -39,13 +40,21 @@ class ConvPMF(nn.Module):
             entropy_sum = 0.0
             num_entropy = 0
         for doc in docs:
-            review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
-            feature_map = self.tanh(self.conv1d(review_embeds))
-            item_embed = torch.mean(
-                torch.max(feature_map, dim=-1, keepdim=False).values,
-                dim=0,
-                keepdim=True,
-            )
+            if doc.shape[0] != 0:
+                review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
+                feature_map = self.tanh(self.conv1d(review_embeds))
+                item_embed = torch.mean(
+                    torch.max(feature_map, dim=-1, keepdim=False).values,
+                    dim=0,
+                    keepdim=True,
+                )
+            else:
+                item_embed = torch.zeros(
+                    (1, self.n_factor),
+                    dtype=torch.float32,
+                    device=torch.device("cuda"),
+                    requires_grad=False,
+                )
             item_embeds.append(item_embed)
             if with_entropy:
                 prob_dist = self.softmax_last_dim(
