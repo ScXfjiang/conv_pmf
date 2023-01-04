@@ -6,12 +6,10 @@ import torchtext
 
 
 def get_dataset_type(type):
-    if type == "amazon_electronics":
-        DatasetT = AmazonElectronics
-    elif type == "amazon_video_games":
-        DatasetT = AmazonVideoGames
-    elif type == "amazon_grocery_and_gourmet_foods":
+    if type == "amazon_grocery_and_gourmet_foods":
         DatasetT = AmazonGroceryAndGourmetFoods
+    elif type == "amazon_apps_for_android":
+        DatasetT = AmazonAppsForAndroid
     else:
         raise NotImplementedError
 
@@ -168,55 +166,31 @@ class Amazon(DatasetIf):
         return df["rating"].std()
 
 
-class AmazonElectronics(Amazon):
-    def __init__(
-        self,
-        train_path,
-        val_path,
-        test_path,
-        mode,
-        dictionary,
-        n_token,
-        global_user_id2global_user_idx,
-        global_item_id2global_item_idx,
-    ):
-        super().__init__(
-            train_path,
-            val_path,
-            test_path,
-            mode,
-            dictionary,
-            n_token,
-            global_user_id2global_user_idx,
-            global_item_id2global_item_idx,
-        )
-
-
-class AmazonVideoGames(Amazon):
-    def __init__(
-        self,
-        train_path,
-        val_path,
-        test_path,
-        mode,
-        dictionary,
-        n_token,
-        global_user_id2global_user_idx,
-        global_item_id2global_item_idx,
-    ):
-        super().__init__(
-            train_path,
-            val_path,
-            test_path,
-            mode,
-            dictionary,
-            n_token,
-            global_user_id2global_user_idx,
-            global_item_id2global_item_idx,
-        )
-
-
 class AmazonGroceryAndGourmetFoods(Amazon):
+    def __init__(
+        self,
+        train_path,
+        val_path,
+        test_path,
+        mode,
+        dictionary,
+        n_token,
+        global_user_id2global_user_idx,
+        global_item_id2global_item_idx,
+    ):
+        super().__init__(
+            train_path,
+            val_path,
+            test_path,
+            mode,
+            dictionary,
+            n_token,
+            global_user_id2global_user_idx,
+            global_item_id2global_item_idx,
+        )
+
+
+class AmazonAppsForAndroid(Amazon):
     def __init__(
         self,
         train_path,
