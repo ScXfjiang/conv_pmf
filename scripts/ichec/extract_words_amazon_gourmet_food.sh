@@ -14,7 +14,7 @@ cd $SLURM_SUBMIT_DIR
 
 module load cuda/11.3
 
-DATA_PATH="/ichec/work/ucd01/xfjiang/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/ichec/home/users/xfjiang/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods1"
 
 for ENTROPY_THRESHOLD in 4.84 4.83 4.82 4.81 4.80 4.75 4.70 4.60 4.50; do
     python ../../src/extract_words.py \
