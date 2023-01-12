@@ -35,7 +35,7 @@ def main():
 
     date_str = date.today().strftime("%b-%d-%Y")
     time_str = time.strftime("%H-%M-%S", time.localtime())
-    log_dir = date_str + "-" + time_str + "-" + uuid.uuid4()
+    log_dir = date_str + "-" + time_str + "-" + str(uuid.uuid4())
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 

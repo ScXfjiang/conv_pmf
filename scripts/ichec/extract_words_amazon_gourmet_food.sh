@@ -21,7 +21,7 @@ for ENTROPY_THRESHOLD in 4.84 4.83 4.82 4.81 4.80 4.75 4.70 4.60 4.50; do
         --dataset_type="amazon_grocery_and_gourmet_foods" \
         --train_dataset_path="${DATA_PATH}/train.json" \
         --word_embeds_type="glove.6B.50d" \
-        --word_embeds_path="/ichec/work/ucd01/xfjiang/glove.6B/glove.6B.50d.txt" \
+        --word_embeds_path="/ichec/work/ucd01/xfjiang/dataset/glove.6B/glove.6B.50d.txt" \
         --checkpoint_path="/ichec/home/users/xfjiang/checkpoint_50.pt" \
         --batch_size=1024 \
         --window_size=5 \
