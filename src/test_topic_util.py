@@ -8,5 +8,5 @@ if __name__ == "__main__":
     dictionary = GloveDict6B(
         "/ichec/work/ucd01/xfjiang/dataset/glove.6B/glove.6B.50d.txt"
     )
-    sparse_token_cnt_mat = SparseTokenCountMat(dataset_path, dictionary)
-    print(type(sparse_token_cnt_mat))
+    token_cnt_mat = SparseTokenCountMat(dataset_path, dictionary)
+    token_cnt_mat.save("token_cnt_mat.npz")
