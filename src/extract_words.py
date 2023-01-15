@@ -150,11 +150,12 @@ def main():
     with open(os.path.join(log_dir, "factor2sorted_words.txt"), "w") as f:
         for factor, sorted_words in factor2sorted_words.items():
             f.write("factor {}: {}\n".format(factor, sorted_words))
-    with open(os.path.join(log_dir, "entropy_stat.txt"), "w") as f:
-        f.write("entropy mean: {}\n".format(np.mean(entropy_list)))
-        f.write("entropy median: {}\n".format(np.median(entropy_list)))
-        f.write("entropy min: {}\n".format(np.min(entropy_list)))
-        f.write("entropy max: {}\n".format(np.max(entropy_list)))
+    if with_entropy:
+        with open(os.path.join(log_dir, "entropy_stat.txt"), "w") as f:
+            f.write("entropy mean: {}\n".format(np.mean(entropy_list)))
+            f.write("entropy median: {}\n".format(np.median(entropy_list)))
+            f.write("entropy min: {}\n".format(np.min(entropy_list)))
+            f.write("entropy max: {}\n".format(np.max(entropy_list)))
 
 
 if __name__ == "__main__":
