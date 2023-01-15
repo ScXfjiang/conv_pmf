@@ -40,13 +40,15 @@ class NPMI:
         self.token_cnt_mat = token_cnt_mat
         self.dictionary = dictionary
 
-    def compute_npmi(self, sorted_topics, n=10):
+    def compute_npmi(self, factor2sorted_topics, n=10):
         # npmi for each factor (conv kernel), [num_doc,]
         npmi_means = []
-        for topics_per_factor in sorted_topics:
+        for _, sorted_topics in factor2sorted_topics.items():
+            if len(sorted_topics) > n:
+                sorted_topics = sorted_topics[:n]
             npmi_vals = []
-            for i, topic_i in enumerate(topics_per_factor):
-                for topic_j in topics_per_factor[i + 1 :]:
+            for i, topic_i in enumerate(sorted_topics):
+                for topic_j in sorted_topics[i + 1 :]:
                     col_i = self.token_cnt_mat[:, topic_i]
                     col_j = self.token_cnt_mat[:, topic_j]
                     c_i = col_i.sum()
