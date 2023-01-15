@@ -45,7 +45,7 @@ class NPMI:
             factor2sorted_topics (dict): factor_id -> list of topics
             k (int): top_k topics
         """
-        # npmi for each factor [num_doc,]
+        # npmi for each factor [n_factor,]
         npmi_means = []
         for _, sorted_topics in factor2sorted_topics.items():
             if len(sorted_topics) > k:
