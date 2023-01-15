@@ -36,7 +36,7 @@ class SparseTokenCountMat:
 class NPMI:
     def __init__(self, token_cnt_mat):
         # sparse matrix: [num_doc, voc_size]
-        self.token_cnt_mat = token_cnt_mat
+        self.token_cnt_mat = token_cnt_mat.tocsc()
         self.npmi_cache = {}
 
     def compute_npmi(self, factor2sorted_topics, k=10):
