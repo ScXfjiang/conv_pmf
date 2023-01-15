@@ -134,7 +134,7 @@ def main():
             else torch.argsort(avg_act_values)
         )
         sorted_tokens = tokens[indices]
-        factor2sorted_tokens[factor] = sorted_tokens.detach().cpu().numpy()
+        factor2sorted_tokens[factor] = list(sorted_tokens.detach().cpu().numpy())
         sorted_words = [
             dictionary.idx2word(token)
             for token in list(sorted_tokens.detach().cpu().numpy())
