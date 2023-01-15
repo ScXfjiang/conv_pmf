@@ -7,7 +7,9 @@ import torch
 import numpy as np
 import pickle as pkl
 import uuid
+import scipy.sparse
 
+from common.topic_util import NPMIUtil
 from extract_words.model import ExtractWords
 from extract_words.dataset import get_dataset_type
 from common.dictionary import get_dictionary_type
@@ -17,6 +19,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_type", default="", type=str)
     parser.add_argument("--train_dataset_path", default="", type=str)
+    parser.add_argument("--token_cnt_mat_path", default="", type=str)
     parser.add_argument("--word_embeds_type", default="", type=str)
     parser.add_argument("--word_embeds_path", default="", type=str)
     parser.add_argument("--checkpoint_path", default="", type=str)
@@ -42,6 +45,7 @@ def main():
     with open(os.path.join(log_dir, "hyper_params.txt"), "w") as f:
         f.write("dataset_type: {}\n".format(args.dataset_type))
         f.write("train_dataset_path: {}\n".format(args.train_dataset_path))
+        f.write("token_cnt_mat_path: {}\n".format(args.token_cnt_mat_path))
         f.write("word_embeds_type: {}\n".format(args.word_embeds_type))
         f.write("word_embeds_path: {}\n".format(args.word_embeds_path))
         f.write("checkpoint_path: {}\n".format(args.checkpoint_path))
@@ -112,6 +116,7 @@ def main():
             factor2token2act_stat[factor] = token2act_stat
 
     # 2. extract words by average activation value
+    factor2sorted_tokens = {}
     factor2sorted_words = {}
     for factor, word2act_stat in factor2token2act_stat.items():
         token_list = []
@@ -133,24 +138,38 @@ def main():
             else torch.argsort(avg_act_values)
         )
         sorted_tokens = tokens[indices]
+        factor2sorted_tokens[factor] = list(sorted_tokens.detach().cpu().numpy())
         sorted_words = [
             dictionary.idx2word(token)
             for token in list(sorted_tokens.detach().cpu().numpy())
         ]
         factor2sorted_words[factor] = sorted_words
 
+    # 3. calculate NPMI to evaluate topic quality
+    token_cnt_mat = scipy.sparse.load_npz(args.token_cnt_mat_path)
+    npmi_util = NPMIUtil(token_cnt_mat)
+    npmis = npmi_util.compute_npmi(factor2sorted_tokens)
+    avg_npmi = np.mean(npmis)
+
     with open(os.path.join(log_dir, "factor2token2act_stat.pkl"), "wb") as f:
         pkl.dump(factor2token2act_stat, f)
     with open(os.path.join(log_dir, "factor2sorted_words.pkl"), "wb") as f:
         pkl.dump(factor2sorted_words, f)
+    with open(os.path.join(log_dir, "factor2sorted_tokens.pkl"), "wb") as f:
+        pkl.dump(factor2sorted_tokens, f)
     with open(os.path.join(log_dir, "factor2sorted_words.txt"), "w") as f:
         for factor, sorted_words in factor2sorted_words.items():
             f.write("factor {}: {}\n".format(factor, sorted_words))
-    with open(os.path.join(log_dir, "entropy_stat.txt"), "w") as f:
-        f.write("entropy mean: {}\n".format(np.mean(entropy_list)))
-        f.write("entropy median: {}\n".format(np.median(entropy_list)))
-        f.write("entropy min: {}\n".format(np.min(entropy_list)))
-        f.write("entropy max: {}\n".format(np.max(entropy_list)))
+    with open(os.path.join(log_dir, "npmi_info.txt"), "w") as f:
+        f.write("avg npmi: {}\n".format(avg_npmi))
+        for factor, npmi in enumerate(list(npmis)):
+            f.write("factor {}: {}\n".format(factor, npmi))
+    if with_entropy:
+        with open(os.path.join(log_dir, "entropy_stat.txt"), "w") as f:
+            f.write("entropy mean: {}\n".format(np.mean(entropy_list)))
+            f.write("entropy median: {}\n".format(np.median(entropy_list)))
+            f.write("entropy min: {}\n".format(np.min(entropy_list)))
+            f.write("entropy max: {}\n".format(np.max(entropy_list)))
 
 
 if __name__ == "__main__":
