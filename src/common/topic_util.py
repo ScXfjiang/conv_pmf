@@ -41,7 +41,7 @@ class NPMI:
         self.dictionary = dictionary
 
     def compute_npmi(self, sorted_topics, n=10):
-        # npmi for each factor (conv kernel)
+        # npmi for each factor (conv kernel), [num_doc,]
         npmi_means = []
         for topics_per_factor in sorted_topics:
             npmi_vals = []
