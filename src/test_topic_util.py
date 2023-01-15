@@ -8,7 +8,7 @@ import scipy.sparse
 if __name__ == "__main__":
     token_cnt_mat = scipy.sparse.load_npz("/ichec/work/ucd01/xfjiang/dataset/amazon/amazon_grocery_and_gourmet_foods1/token_cnt_mat.npz")
     npmi = NPMI(token_cnt_mat)
-    with open("/ichec/home/users/xfjiang/workspace/repos/conv_pmf/scripts/ichec/Jan-12-2023-14-51-27-a48b1ce4-0e62-4c11-9feb-d0a8327cfe39/factor2sorted_words.pkl", "rb") as f:
+    with open("/ichec/home/users/xfjiang/workspace/repos/conv_pmf/scripts/ichec/Jan-15-2023-14-04-22-66990545-8a1b-46a3-b6c4-ddb465d33981/factor2sorted_tokens.pkl", "rb") as f:
         factor2sorted_topics = pkl.load(f)
     x = npmi.compute_npmi(factor2sorted_topics)
     print(x)
