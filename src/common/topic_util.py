@@ -22,9 +22,8 @@ class SparseTokenCountMat:
             self.token_cnt_mat = lil_matrix((num_doc, voc_size), dtype=np.int32)
             f.seek(0)
             for doc_idx, line in enumerate(f):
-                js = json.loads(line)
                 tokenizer = torchtext.data.get_tokenizer("basic_english")
-                tokens = tokenizer(str(js["reviewText"]))
+                tokens = tokenizer(str(json.loads(line)["reviewText"]))
                 for token in tokens:
                     token_idx = dictionary.word2idx(token)
                     self.token_cnt_mat[doc_idx, token_idx] += 1
