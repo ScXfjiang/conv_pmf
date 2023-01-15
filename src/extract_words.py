@@ -112,6 +112,7 @@ def main():
             factor2token2act_stat[factor] = token2act_stat
 
     # 2. extract words by average activation value
+    factor2sorted_tokens = {}
     factor2sorted_words = {}
     for factor, word2act_stat in factor2token2act_stat.items():
         token_list = []
@@ -133,6 +134,7 @@ def main():
             else torch.argsort(avg_act_values)
         )
         sorted_tokens = tokens[indices]
+        factor2sorted_tokens[factor] = sorted_tokens
         sorted_words = [
             dictionary.idx2word(token)
             for token in list(sorted_tokens.detach().cpu().numpy())
@@ -143,6 +145,8 @@ def main():
         pkl.dump(factor2token2act_stat, f)
     with open(os.path.join(log_dir, "factor2sorted_words.pkl"), "wb") as f:
         pkl.dump(factor2sorted_words, f)
+    with open(os.path.join(log_dir, "factor2sorted_tokens.pkl"), "wb") as f:
+        pkl.dump(factor2sorted_tokens, f)
     with open(os.path.join(log_dir, "factor2sorted_words.txt"), "w") as f:
         for factor, sorted_words in factor2sorted_words.items():
             f.write("factor {}: {}\n".format(factor, sorted_words))

@@ -76,4 +76,3 @@ class NPMI:
                     npmi_vals.append(npmi)
             npmi_means.append(np.mean(npmi_vals))
         return np.array(npmi_means)
-
