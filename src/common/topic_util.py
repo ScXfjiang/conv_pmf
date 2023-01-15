@@ -34,17 +34,21 @@ class SparseTokenCountMat:
 
 
 class NPMI:
-    def __init__(self, token_cnt_mat, dictionary):
+    def __init__(self, token_cnt_mat):
         # sparse matrix: [num_doc, voc_size]
         self.token_cnt_mat = token_cnt_mat
-        self.dictionary = dictionary
 
-    def compute_npmi(self, factor2sorted_topics, n=10):
-        # npmi for each factor (conv kernel), [num_doc,]
+    def compute_npmi(self, factor2sorted_topics, k=10):
+        """
+        Args:
+            factor2sorted_topics (dict): factor_id -> list of topics
+            k (int): top_k topics
+        """
+        # npmi for each factor [num_doc,]
         npmi_means = []
         for _, sorted_topics in factor2sorted_topics.items():
-            if len(sorted_topics) > n:
-                sorted_topics = sorted_topics[:n]
+            if len(sorted_topics) > k:
+                sorted_topics = sorted_topics[:k]
             npmi_vals = []
             for i, topic_i in enumerate(sorted_topics):
                 for topic_j in sorted_topics[i + 1 :]:
