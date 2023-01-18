@@ -34,6 +34,12 @@ class ConvPMF(nn.Module):
         self.bias = torch.nn.Parameter(torch.tensor(self.rating_mean))
 
     def forward(self, user_indices, docs, with_entropy=False):
+        """
+        Args:
+            user_indices: [batch_size,]
+            docs: list of [num_review, num_word]
+            with_entropy (bool, optional): entropy regularization
+        """
         user_embeds = torch.index_select(self.w_user, 0, user_indices)
         item_embeds = []
         if with_entropy:
@@ -41,7 +47,9 @@ class ConvPMF(nn.Module):
             num_entropy = 0
         for doc in docs:
             if doc.shape[0] != 0:
+                # [num_review, embed_len, num_word]
                 review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
+                # [num_review, num_filter, num_word]
                 feature_map = self.tanh(self.conv1d(review_embeds))
                 item_embed = torch.mean(
                     torch.max(feature_map, dim=-1, keepdim=False).values,
