@@ -49,21 +49,19 @@ class ConvPMF(nn.Module):
             if doc.shape[0] != 0:
                 # [num_review, embed_len, num_word]
                 review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
-                # [num_review, num_filter, num_word]
-                feature_map = self.tanh(self.conv1d(review_embeds))
+                # [num_review, n_factor, num_word]
+                feature_map = self.softmax_last_dim(self.conv1d(review_embeds))
+                # [1, n_factor]
                 item_embed = torch.mean(
                     torch.max(feature_map, dim=-1, keepdim=False).values,
                     dim=0,
                     keepdim=True,
                 )
                 if with_entropy:
-                    prob_dist = self.softmax_last_dim(
-                        torch.reshape(feature_map, (-1, feature_map.shape[-1]),)
-                    )
-                    doc_entropy = -torch.sum(prob_dist * torch.log(prob_dist))
-                    entropy_sum += doc_entropy
-                    doc_num_entropy = prob_dist.shape[0]
-                    num_entropy += doc_num_entropy
+                    # [doc_total_num_review, num_word]
+                    prob_dist = torch.reshape(feature_map, (-1, feature_map.shape[-1]))
+                    entropy_sum += -torch.sum(prob_dist * torch.log(prob_dist))
+                    num_entropy += prob_dist.shape[0]
             else:
                 # deal with empty doc -> use self.bias as estimate rating
                 item_embed = torch.zeros(
