@@ -7,9 +7,11 @@ class ConvPMF(nn.Module):
         self, num_user, n_factor, word_embeds, window_size, rating_mean, rating_std,
     ):
         super(ConvPMF, self).__init__()
+        # [num_user, n_factor]
         self.w_user = nn.parameter.Parameter(
             torch.empty((num_user, n_factor)), requires_grad=True,
         )
+        # [voc_size, embed_length]
         self.embedding = nn.Embedding.from_pretrained(
             embeddings=torch.as_tensor(word_embeds.embed_matrix()), freeze=False,
         )
@@ -18,7 +20,7 @@ class ConvPMF(nn.Module):
             out_channels=n_factor,
             kernel_size=window_size,
             padding="same",
-            bias=False,
+            bias=False,  # only calculate activation, no need for bias
         )
         self.n_factor = n_factor
         self.tanh = nn.Tanh()
