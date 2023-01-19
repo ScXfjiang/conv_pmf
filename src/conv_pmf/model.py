@@ -144,6 +144,7 @@ class ConvPMF(nn.Module):
                 feature_map = torch.permute(
                     self.tanh(self.conv1d(review_embeds)), (1, 0, 2)
                 )
+
                 # filter out reviews with high entropy
                 n_factor, num_review, num_word = (
                     feature_map.shape[0],
@@ -165,6 +166,7 @@ class ConvPMF(nn.Module):
                     dim=1,
                     index=indices.unsqueeze(-1).expand(n_factor, num_review, num_word),
                 )
+                
                 # [1, n_factor]
                 item_embed = torch.mean(
                     torch.max(feature_map, dim=-1, keepdim=False).values,
