@@ -46,8 +46,8 @@ class ConvPMF(nn.Module):
         if with_entropy:
             return self.forward_with_entropy(user_indices, docs)
         else:
-            return self.forward_without_entropy(user_indices, docs)
-            # return self.forward_drop(user_indices, docs, quantile=0.5)
+            # return self.forward_without_entropy(user_indices, docs)
+            return self.forward_drop(user_indices, docs, quantile=0.5)
             # return self.forward_weighted_sum(user_indices, docs)
 
     def forward_with_entropy(self, user_indices, docs):
@@ -145,7 +145,7 @@ class ConvPMF(nn.Module):
                     self.tanh(self.conv1d(review_embeds)), (1, 0, 2)
                 )
                 # filter out reviews with high entropy
-                n_factor, num_review, num_token = (
+                n_factor, num_review, num_word = (
                     feature_map.shape[0],
                     feature_map.shape[1],
                     feature_map.shape[2],
@@ -159,11 +159,11 @@ class ConvPMF(nn.Module):
                 indices = torch.topk(
                     entropy, k=num_review, dim=-1, largest=False, sorted=False,
                 ).indices
-                # [n_factor, num_review * quantile, num_token]
+                # [n_factor, num_review * quantile, num_word]
                 feature_map = torch.gather(
                     feature_map,
                     dim=1,
-                    index=indices.unsqueeze(-1).expand(n_factor, num_review, num_token),
+                    index=indices.unsqueeze(-1).expand(n_factor, num_review, num_word),
                 )
                 # [1, n_factor]
                 item_embed = torch.mean(
@@ -203,7 +203,7 @@ class ConvPMF(nn.Module):
                 )
                 # [n_factor, num_review]
                 max_values = torch.max(feature_map, dim=-1, keepdim=False).values
-                # [n_factor, num_review, num_token]
+                # [n_factor, num_review, num_word]
                 prob_dist = self.softmax_last_dim(feature_map)
                 # [n_factor, num_review]
                 entropy = -torch.sum(prob_dist * torch.log(prob_dist), dim=-1)
