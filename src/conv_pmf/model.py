@@ -46,8 +46,8 @@ class ConvPMF(nn.Module):
         if with_entropy:
             return self.forward_with_entropy(user_indices, docs)
         else:
-            # return self.forward_without_entropy(user_indices, docs)
-            return self.forward_drop(user_indices, docs, quantile=0.5)
+            return self.forward_without_entropy(user_indices, docs)
+            # return self.forward_drop(user_indices, docs, quantile=0.5)
             # return self.forward_weighted_sum(user_indices, docs)
 
     def forward_with_entropy(self, user_indices, docs):
@@ -166,7 +166,7 @@ class ConvPMF(nn.Module):
                     dim=1,
                     index=indices.unsqueeze(-1).expand(n_factor, num_review, num_word),
                 )
-                
+
                 # [1, n_factor]
                 item_embed = torch.mean(
                     torch.max(feature_map, dim=-1, keepdim=False).values,
