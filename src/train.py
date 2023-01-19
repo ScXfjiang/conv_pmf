@@ -31,6 +31,10 @@ class Trainer(object):
         self.model = model
         self.with_entropy = with_entropy
         self.epsilon = epsilon
+        if self.with_entropy:
+            assert self.epsilon > 0
+        else:
+            assert self.epsilon == 0
         self.train_loader = train_loader
         self.num_epoch = num_epoch
         self.optimizer = optimizer
