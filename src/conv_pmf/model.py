@@ -41,9 +41,9 @@ class ConvPMF(nn.Module):
             with_entropy (bool, optional): entropy regularization
         """
         if with_entropy:
-            self.forward_with_entropy(user_indices, docs)
+            return self.forward_with_entropy(user_indices, docs)
         else:
-            self.forward_without_entropy(user_indices, docs)
+            return self.forward_without_entropy(user_indices, docs)
 
     def forward_with_entropy(self, user_indices, docs):
         """
