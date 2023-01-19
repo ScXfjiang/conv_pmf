@@ -21,6 +21,7 @@ class ConvPMF(nn.Module):
             bias=False,
         )
         self.n_factor = n_factor
+        self.tanh = nn.Tanh()
         self.softmax_last_dim = nn.Softmax(dim=-1)
         self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True)
         self.rating_mean = rating_mean
@@ -59,7 +60,7 @@ class ConvPMF(nn.Module):
                 # [num_review, embed_len, num_word]
                 review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
                 # [num_review, n_factor, num_word]
-                feature_map = self.softmax_last_dim(self.conv1d(review_embeds))
+                feature_map = self.tanh(self.conv1d(review_embeds))
                 # [1, n_factor]
                 item_embed = torch.mean(
                     torch.max(feature_map, dim=-1, keepdim=False).values,
@@ -67,7 +68,9 @@ class ConvPMF(nn.Module):
                     keepdim=True,
                 )
                 # [doc_total_num_review, num_word]
-                prob_dist = torch.reshape(feature_map, (-1, feature_map.shape[-1]))
+                prob_dist = self.softmax_last_dim(
+                    torch.reshape(feature_map, (-1, feature_map.shape[-1]))
+                )
                 entropy_sum += -torch.sum(prob_dist * torch.log(prob_dist))
                 num_entropy += prob_dist.shape[0]
             else:
@@ -98,7 +101,7 @@ class ConvPMF(nn.Module):
                 # [num_review, embed_len, num_word]
                 review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
                 # [num_review, n_factor, num_word]
-                feature_map = self.softmax_last_dim(self.conv1d(review_embeds))
+                feature_map = self.tanh(self.conv1d(review_embeds))
                 # [1, n_factor]
                 item_embed = torch.mean(
                     torch.max(feature_map, dim=-1, keepdim=False).values,
