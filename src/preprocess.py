@@ -76,6 +76,7 @@ class Preprocessor(object):
 
     def gen_token_cnt_mat(self, word_embeds_path):
         """
+        This is used for calculating NPMI when extracting topics.
         Args:
             dataset_path: the whole Amazon dataset, train + val + test
             word_embeds_path: used for creating dictionary
