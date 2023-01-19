@@ -71,7 +71,8 @@ def main():
     factor2token2act_stat = {}
     for factor in range(args.n_factor):
         factor2token2act_stat[factor] = {}
-    entropy_list = []
+    if with_entropy:
+        entropy_list = []
     for reviews in train_loader:
         reviews = reviews.to(device="cuda")
         # [n_factor, batch_size, n_words]
