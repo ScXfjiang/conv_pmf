@@ -11,8 +11,8 @@ import matplotlib.pyplot as plt
 from conv_pmf.model import ConvPMF
 from conv_pmf.dataset import get_dataset_type
 from conv_pmf.data_loader import collate_fn
-from common.dictionary import get_dictionary_type
-from common.word_embeds import get_embeds_type
+from common.dictionary import GloveDict6B
+from common.word_embeds import GloveEmbeds
 from common.util import show_elapsed_time
 
 
@@ -137,7 +137,6 @@ def main():
     parser.add_argument("--train_dataset_path", default="", type=str)
     parser.add_argument("--val_dataset_path", default="", type=str)
     parser.add_argument("--test_dataset_path", default="", type=str)
-    parser.add_argument("--word_embeds_type", default="", type=str)
     parser.add_argument("--word_embeds_path", default="", type=str)
     parser.add_argument("--global_user_id2global_user_idx", default="", type=str)
     parser.add_argument("--global_item_id2global_item_idx", default="", type=str)
@@ -171,7 +170,6 @@ def main():
         f.write("train_dataset_path: {}\n".format(args.train_dataset_path))
         f.write("val_dataset_path: {}\n".format(args.val_dataset_path))
         f.write("test_dataset_path: {}\n".format(args.test_dataset_path))
-        f.write("word_embeds_type: {}\n".format(args.word_embeds_type))
         f.write("word_embeds_path: {}\n".format(args.word_embeds_path))
         f.write(
             "global_user_id2global_user_idx: {}\n".format(
@@ -196,10 +194,8 @@ def main():
         f.write("momentum: {}\n".format(args.momentum))
         f.write("weight_decay: {}\n".format(args.weight_decay))
 
-    DictionaryT = get_dictionary_type(args.word_embeds_type)
-    dictionary = DictionaryT(args.word_embeds_path)
-    EmbedT = get_embeds_type(args.word_embeds_type)
-    word_embeds = EmbedT(args.word_embeds_path)
+    dictionary = GloveDict6B(args.word_embeds_path)
+    word_embeds = GloveEmbeds(args.word_embeds_path)
     with open(args.global_user_id2global_user_idx, "rb") as f:
         global_user_id2global_user_idx = pkl.load(f)
         global_num_user = len(global_user_id2global_user_idx)

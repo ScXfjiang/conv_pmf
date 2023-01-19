@@ -22,7 +22,6 @@ for LOG_DIR in Sep-10-2022-17-28-52 Sep-10-2022-17-56-25 Sep-11-2022-12-40-31 Se
         --train_dataset_path="${DATA_PATH}/train.json" \
         --val_dataset_path="${DATA_PATH}/val.json" \
         --test_dataset_path="${DATA_PATH}/test.json" \
-        --word_embeds_type="glove.6B.50d" \
         --word_embeds_path="/home/people/22200056/workspace/dataset/glove.6B/glove.6B.50d.txt" \
         --global_user_id2global_user_idx="${DATA_PATH}/global_user_id2global_user_idx.pkl" \
         --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \

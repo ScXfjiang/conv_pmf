@@ -12,7 +12,7 @@ import scipy.sparse
 from common.topic_util import NPMIUtil
 from extract_words.model import ExtractWords
 from extract_words.dataset import get_dataset_type
-from common.dictionary import get_dictionary_type
+from common.dictionary import GloveDict6B
 
 
 def main():
@@ -20,7 +20,6 @@ def main():
     parser.add_argument("--dataset_type", default="", type=str)
     parser.add_argument("--train_dataset_path", default="", type=str)
     parser.add_argument("--token_cnt_mat_path", default="", type=str)
-    parser.add_argument("--word_embeds_type", default="", type=str)
     parser.add_argument("--word_embeds_path", default="", type=str)
     parser.add_argument("--checkpoint_path", default="", type=str)
     parser.add_argument("--batch_size", default=128, type=int)
@@ -44,7 +43,6 @@ def main():
         f.write("dataset_type: {}\n".format(args.dataset_type))
         f.write("train_dataset_path: {}\n".format(args.train_dataset_path))
         f.write("token_cnt_mat_path: {}\n".format(args.token_cnt_mat_path))
-        f.write("word_embeds_type: {}\n".format(args.word_embeds_type))
         f.write("word_embeds_path: {}\n".format(args.word_embeds_path))
         f.write("checkpoint_path: {}\n".format(args.checkpoint_path))
         f.write("batch_size: {}\n".format(args.batch_size))
@@ -56,8 +54,7 @@ def main():
         f.write("least_act_num: {}\n".format(args.least_act_num))
         f.write("k: {}\n".format(args.k))
 
-    DictionaryT = get_dictionary_type(args.word_embeds_type)
-    dictionary = DictionaryT(args.word_embeds_path)
+    dictionary = GloveDict6B(args.word_embeds_path)
     DatasetT = get_dataset_type(args.dataset_type)
     train_set = DatasetT(args.train_dataset_path, dictionary, args.n_word,)
     train_loader = torch.utils.data.DataLoader(

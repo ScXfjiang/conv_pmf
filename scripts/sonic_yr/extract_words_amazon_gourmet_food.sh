@@ -20,7 +20,6 @@ DATA_PATH="/home/people/22200056/workspace/dataset/amazon/amazon_grocery_and_gou
 python ../../src/extract_words.py \
     --dataset_type="amazon_grocery_and_gourmet_foods" \
     --train_dataset_path="${DATA_PATH}/train.json" \
-    --word_embeds_type="glove.6B.50d" \
     --word_embeds_path="/home/people/22200056/workspace/dataset/glove.6B/glove.6B.50d.txt" \
     --checkpoint_path="/scratch/22200056/conv_pmf_results/conv_pmf_entropy_A/epsilon_0.00005/Sep-11-2022-05-19-09/checkpoint/checkpoint_50.pt" \
     --batch_size=1024 \

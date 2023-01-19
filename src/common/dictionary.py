@@ -1,18 +1,3 @@
-def get_dictionary_type(type):
-    if type == "glove.6B.50d":
-        DictionaryT = GloveDict6B50D
-    elif type == "glove.6B.100d":
-        DictionaryT = GloveDict6B100D
-    elif type == "glove.6B.200d":
-        DictionaryT = GloveDict6B200D
-    elif type == "glove.6B.300d":
-        DictionaryT = GloveDict6B300D
-    else:
-        raise NotImplementedError
-
-    return DictionaryT
-
-
 class DictionaryIf(object):
     def __init__(self, path):
         super(DictionaryIf, self).__init__()
@@ -70,23 +55,3 @@ class GloveDict6B(DictionaryIf):
 
     def padding_idx(self):
         return self.vocab_size() - 1
-
-
-class GloveDict6B50D(GloveDict6B):
-    def __init__(self, path):
-        super().__init__(path)
-
-
-class GloveDict6B100D(GloveDict6B):
-    def __init__(self, path):
-        super().__init__(path)
-
-
-class GloveDict6B200D(GloveDict6B):
-    def __init__(self, path):
-        super().__init__(path)
-
-
-class GloveDict6B300D(GloveDict6B):
-    def __init__(self, path):
-        super().__init__(path)

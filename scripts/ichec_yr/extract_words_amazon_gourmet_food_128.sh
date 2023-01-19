@@ -36,7 +36,6 @@ for checkpoint in ${checkpoint_files}; do
         --dataset_type="amazon_grocery_and_gourmet_foods" \
         --train_dataset_path="${DATA_PATH}/train.json" \
         --token_cnt_mat="${DATA_PATH}/token_cnt_mat.npz" \
-        --word_embeds_type="glove.6B.50d" \
         --word_embeds_path="/ichec/work/ucd01/yongru/dataset/glove.6B/glove.6B.50d.txt" \
         --checkpoint_path=${checkpoint} \
         --batch_size=1024 \

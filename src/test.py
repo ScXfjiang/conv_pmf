@@ -6,8 +6,8 @@ import pickle as pkl
 from conv_pmf.model import ConvPMF
 from conv_pmf.dataset import get_dataset_type
 from conv_pmf.data_loader import collate_fn
-from common.dictionary import get_dictionary_type
-from common.word_embeds import get_embeds_type
+from common.dictionary import GloveDict6B
+from common.word_embeds import GloveEmbeds
 
 
 def main():
@@ -17,7 +17,6 @@ def main():
     parser.add_argument("--val_dataset_path", default="", type=str)
     parser.add_argument("--test_dataset_path", default="", type=str)
     parser.add_argument("--checkpoint_path", default="", type=str)
-    parser.add_argument("--word_embeds_type", default="", type=str)
     parser.add_argument("--word_embeds_path", default="", type=str)
     parser.add_argument("--global_user_id2global_user_idx", default="", type=str)
     parser.add_argument("--global_item_id2global_item_idx", default="", type=str)
@@ -27,10 +26,8 @@ def main():
     parser.add_argument("--n_factor", default=32, type=int)
     args = parser.parse_args()
 
-    DictionaryT = get_dictionary_type(args.word_embeds_type)
-    dictionary = DictionaryT(args.word_embeds_path)
-    EmbedT = get_embeds_type(args.word_embeds_type)
-    word_embeds = EmbedT(args.word_embeds_path)
+    dictionary = GloveDict6B(args.word_embeds_path)
+    word_embeds = GloveEmbeds(args.word_embeds_path)
     with open(args.global_user_id2global_user_idx, "rb") as f:
         global_user_id2global_user_idx = pkl.load(f)
     with open(args.global_item_id2global_item_idx, "rb") as f:
