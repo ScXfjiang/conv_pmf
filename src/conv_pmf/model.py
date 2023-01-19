@@ -45,40 +45,6 @@ class ConvPMF(nn.Module):
         else:
             self.forward_without_entropy(user_indices, docs)
 
-    def forward_without_entropy(self, user_indices, docs):
-        """
-        Args:
-            user_indices: [batch_size,]
-            docs: list of [num_review, num_word]
-        """
-        user_embeds = torch.index_select(self.w_user, 0, user_indices)
-        item_embeds = []
-        for doc in docs:
-            if doc.shape[0] != 0:
-                # [num_review, embed_len, num_word]
-                review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
-                # [num_review, n_factor, num_word]
-                feature_map = self.softmax_last_dim(self.conv1d(review_embeds))
-                # [1, n_factor]
-                item_embed = torch.mean(
-                    torch.max(feature_map, dim=-1, keepdim=False).values,
-                    dim=0,
-                    keepdim=True,
-                )
-            else:
-                # deal with empty doc -> use self.bias as estimate rating
-                item_embed = torch.zeros(
-                    (1, self.n_factor),
-                    dtype=torch.float32,
-                    device=torch.device("cuda"),
-                    requires_grad=False,
-                )
-            item_embeds.append(item_embed)
-        item_embeds = torch.cat(item_embeds, dim=0)
-        estimate_ratings = torch.sum(user_embeds * item_embeds, dim=-1) + self.bias
-
-        return estimate_ratings
-
     def forward_with_entropy(self, user_indices, docs):
         """
         Args:
@@ -119,3 +85,37 @@ class ConvPMF(nn.Module):
         entropy = entropy_sum / num_entropy
 
         return estimate_ratings, entropy
+
+    def forward_without_entropy(self, user_indices, docs):
+        """
+        Args:
+            user_indices: [batch_size,]
+            docs: list of [num_review, num_word]
+        """
+        user_embeds = torch.index_select(self.w_user, 0, user_indices)
+        item_embeds = []
+        for doc in docs:
+            if doc.shape[0] != 0:
+                # [num_review, embed_len, num_word]
+                review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
+                # [num_review, n_factor, num_word]
+                feature_map = self.softmax_last_dim(self.conv1d(review_embeds))
+                # [1, n_factor]
+                item_embed = torch.mean(
+                    torch.max(feature_map, dim=-1, keepdim=False).values,
+                    dim=0,
+                    keepdim=True,
+                )
+            else:
+                # deal with empty doc -> use self.bias as estimate rating
+                item_embed = torch.zeros(
+                    (1, self.n_factor),
+                    dtype=torch.float32,
+                    device=torch.device("cuda"),
+                    requires_grad=False,
+                )
+            item_embeds.append(item_embed)
+        item_embeds = torch.cat(item_embeds, dim=0)
+        estimate_ratings = torch.sum(user_embeds * item_embeds, dim=-1) + self.bias
+
+        return estimate_ratings
