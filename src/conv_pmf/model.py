@@ -21,9 +21,8 @@ class ConvPMF(nn.Module):
             bias=False,
         )
         self.n_factor = n_factor
-        self.tanh = nn.Tanh()
         self.softmax_last_dim = nn.Softmax(dim=-1)
-        self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True,)
+        self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True)
         self.rating_mean = rating_mean
         self.rating_std = rating_std
         self.init_weight()
