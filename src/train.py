@@ -107,7 +107,7 @@ class Trainer(object):
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse
             else:
-                raise ValueError("epsilon must be greater or equal to 0")
+                raise ValueError("epsilon must be greater than or equal to 0.0")
             batch_losses.append(mse)
             # backward
             loss.backward()
