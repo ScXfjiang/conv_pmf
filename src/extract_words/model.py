@@ -16,7 +16,7 @@ class ExtractWords(nn.Module):
             padding="same",
             bias=False,
         )
-        self.softmax_last_dim = nn.Softmax(dim=-1)
+        self.tanh = nn.Tanh()
         self.init_weight(conv_weight)
         self.n_factor = n_factor
 
@@ -27,7 +27,7 @@ class ExtractWords(nn.Module):
         # [batch_size, embedding_dim, n_words]
         review_embeds = torch.permute(self.embedding(reviews), (0, 2, 1))
         # [batch_size, n_factor, n_words]
-        activations = self.softmax_last_dim(self.conv1d(review_embeds))
+        activations = self.tanh(self.conv1d(review_embeds))
         # [n_factor, batch_size, n_words]
         activations = torch.permute(activations, (1, 0, 2))
 
