@@ -17,7 +17,7 @@
 # run from current directory
 cd $SLURM_SUBMIT_DIR
 
-DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
 for idx in 1; do
     for cuda_device_idx in 0 1; do

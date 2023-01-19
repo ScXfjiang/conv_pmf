@@ -14,7 +14,7 @@ cd $SLURM_SUBMIT_DIR
 
 module load cuda/11.3
 
-DATA_PATH="/ichec/work/ucd01/yongru/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/ichec/work/ucd01/yongru/amazon/amazon_grocery_and_gourmet_foods"
 
 for LOG_DIR in Sep-10-2022-14-34-44; do
     python ../../src/test.py \

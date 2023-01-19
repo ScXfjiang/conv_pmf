@@ -1,5 +1,5 @@
 #!/home/xuefei/anaconda3/bin/zsh
-DATA_PATH="/data/xuefei/dataset/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/data/xuefei/dataset/amazon/amazon_grocery_and_gourmet_foods"
 CHECKPOINT_PATH=$1
 N_FACTOR=$2
 

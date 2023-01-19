@@ -17,7 +17,7 @@ cd $SLURM_SUBMIT_DIR
 
 module load cuda/11.3
 
-DATA_PATH="/ichec/home/users/xfjiang/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/ichec/home/users/xfjiang/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
 checkpoint_files=()
 checkpoint_files+="/ichec/work/ucd01/xfjiang/experiment/conv_pmf_result/baseline_without_entropy/n_factor_16/Oct-26-2022-23-47-02-95b9d8c4-086e-48e7-8574-370c6f0c001e/checkpoint/checkpoint_50.pt"

@@ -17,7 +17,7 @@ cd $SLURM_SUBMIT_DIR
 
 module load cuda/11.3
 
-DATA_PATH="/ichec/work/ucd01/xfjiang/dataset/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/ichec/work/ucd01/xfjiang/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
 for idx in 1; do
     for cuda_device_idx in 0 1; do

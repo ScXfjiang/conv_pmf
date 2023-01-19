@@ -15,7 +15,7 @@
 # run from current directory
 cd $SLURM_SUBMIT_DIR
 
-DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
 python ../../src/extract_words.py \
     --dataset_path="${DATA_PATH}" \

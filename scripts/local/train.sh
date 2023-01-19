@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DATA_PATH="/data/xuefei/dataset/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/data/xuefei/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
 python ../../src/train.py \
     --dataset_path="${DATA_PATH}" \

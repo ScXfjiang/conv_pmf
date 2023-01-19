@@ -14,7 +14,7 @@
 # run from current directory
 cd $SLURM_SUBMIT_DIR
 
-DATA_PATH="/scratch/22200056/dataset/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/scratch/22200056/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
 CHECKPOINT_PATH="/home/people/22200056/scratch/experiment/conv_pmf_result/baseline_without_entropy/n_factor_32"
 N_FACTOR=32
