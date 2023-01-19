@@ -33,8 +33,7 @@ checkpoint_files+=" /ichec/work/ucd01/xfjiang/experiment/conv_pmf_result/conv_pm
 
 for checkpoint in ${checkpoint_files}; do
     python ../../src/extract_words.py \
-        --dataset_type="amazon_grocery_and_gourmet_foods" \
-        --train_dataset_path="${DATA_PATH}/train.json" \
+        --dataset_path="${DATA_PATH}" \
         --token_cnt_mat="${DATA_PATH}/token_cnt_mat.npz" \
         --word_embeds_path="/ichec/work/ucd01/xfjiang/dataset/glove.6B/glove.6B.50d.txt" \
         --checkpoint_path=${checkpoint} \

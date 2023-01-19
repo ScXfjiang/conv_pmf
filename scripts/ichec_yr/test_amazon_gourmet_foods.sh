@@ -18,10 +18,7 @@ DATA_PATH="/ichec/work/ucd01/yongru/amazon/amazon_grocery_and_gourmet_foods1"
 
 for LOG_DIR in Sep-10-2022-14-34-44; do
     python ../../src/test.py \
-        --dataset_type="amazon_grocery_and_gourmet_foods" \
-        --train_dataset_path="${DATA_PATH}/train.json" \
-        --val_dataset_path="${DATA_PATH}/val.json" \
-        --test_dataset_path="${DATA_PATH}/test.json" \
+        --dataset_path="${DATA_PATH}" \
         --word_embeds_path="/ichec/work/ucd01/yongru/glove.6B/glove.6B.50d.txt" \
         --global_user_id2global_user_idx="${DATA_PATH}/global_user_id2global_user_idx.pkl" \
         --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \

@@ -3,10 +3,7 @@
 DATA_PATH="/data/xuefei/dataset/amazon/amazon_grocery_and_gourmet_foods1"
 
 python ../../src/train.py \
-    --dataset_type="amazon_grocery_and_gourmet_foods" \
-    --train_dataset_path="${DATA_PATH}/train.json" \
-    --val_dataset_path="${DATA_PATH}/val.json" \
-    --test_dataset_path="${DATA_PATH}/test.json" \
+    --dataset_path="${DATA_PATH}" \
     --word_embeds_path="/data/xuefei/dataset/glove.6B/glove.6B.50d.txt" \
     --global_user_id2global_user_idx="${DATA_PATH}/global_user_id2global_user_idx.pkl" \
     --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \

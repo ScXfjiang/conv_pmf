@@ -4,7 +4,7 @@ import torch
 import pickle as pkl
 
 from conv_pmf.model import ConvPMF
-from conv_pmf.dataset import get_dataset_type
+from conv_pmf.dataset import Amazon
 from conv_pmf.data_loader import collate_fn
 from common.dictionary import GloveDict6B
 from common.word_embeds import GloveEmbeds
@@ -12,7 +12,6 @@ from common.word_embeds import GloveEmbeds
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_type", default="", type=str)
     parser.add_argument("--train_dataset_path", default="", type=str)
     parser.add_argument("--val_dataset_path", default="", type=str)
     parser.add_argument("--test_dataset_path", default="", type=str)
@@ -32,8 +31,7 @@ def main():
         global_user_id2global_user_idx = pkl.load(f)
     with open(args.global_item_id2global_item_idx, "rb") as f:
         global_item_id2global_item_idx = pkl.load(f)
-    DatasetT = get_dataset_type(args.dataset_type)
-    test_set = DatasetT(
+    test_set = Amazon(
         args.train_dataset_path,
         args.val_dataset_path,
         args.test_dataset_path,

@@ -9,7 +9,7 @@ import uuid
 import matplotlib.pyplot as plt
 
 from conv_pmf.model import ConvPMF
-from conv_pmf.dataset import get_dataset_type
+from conv_pmf.dataset import Amazon
 from conv_pmf.data_loader import collate_fn
 from common.dictionary import GloveDict6B
 from common.word_embeds import GloveEmbeds
@@ -133,10 +133,7 @@ class Trainer(object):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_type", default="", type=str)
-    parser.add_argument("--train_dataset_path", default="", type=str)
-    parser.add_argument("--val_dataset_path", default="", type=str)
-    parser.add_argument("--test_dataset_path", default="", type=str)
+    parser.add_argument("--dataset_path", default="", type=str)
     parser.add_argument("--word_embeds_path", default="", type=str)
     parser.add_argument("--global_user_id2global_user_idx", default="", type=str)
     parser.add_argument("--global_item_id2global_item_idx", default="", type=str)
@@ -155,21 +152,18 @@ def main():
     args = parser.parse_args()
     with_entropy = True if args.with_entropy == "True" else False
 
-    # initialize log dir: dataset + datetime + uuid
+    # initialize log dir: datetime + uuid
     today = date.today()
     date_str = today.strftime("%b-%d-%Y")
     time_str = time.strftime("%H-%M-%S", time.localtime())
     datetime_str = date_str + "-" + time_str
-    log_dir = os.path.join(args.dataset_type, datetime_str + "-" + str(uuid.uuid4()))
+    log_dir = os.path.join("log", datetime_str + "-" + str(uuid.uuid4()))
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
     # save all command args
     with open(os.path.join(log_dir, "hyper_params.txt"), "w") as f:
-        f.write("dataset_type: {}\n".format(args.dataset_type))
-        f.write("train_dataset_path: {}\n".format(args.train_dataset_path))
-        f.write("val_dataset_path: {}\n".format(args.val_dataset_path))
-        f.write("test_dataset_path: {}\n".format(args.test_dataset_path))
+        f.write("dataset_path: {}\n".format(args.dataset_path))
         f.write("word_embeds_path: {}\n".format(args.word_embeds_path))
         f.write(
             "global_user_id2global_user_idx: {}\n".format(
@@ -202,21 +196,16 @@ def main():
     with open(args.global_item_id2global_item_idx, "rb") as f:
         global_item_id2global_item_idx = pkl.load(f)
 
-    DatasetT = get_dataset_type(args.dataset_type)
-    train_set = DatasetT(
-        args.train_dataset_path,
-        args.val_dataset_path,
-        args.test_dataset_path,
+    train_set = Amazon(
+        args.dataset_path,
         "train",
         dictionary,
         args.n_word,
         global_user_id2global_user_idx,
         global_item_id2global_item_idx,
     )
-    val_set = DatasetT(
-        args.train_dataset_path,
-        args.val_dataset_path,
-        args.test_dataset_path,
+    val_set = Amazon(
+        args.dataset_path,
         "val",
         dictionary,
         args.n_word,

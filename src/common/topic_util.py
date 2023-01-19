@@ -1,7 +1,6 @@
 import json
 import numpy as np
 import torchtext
-import scipy
 from scipy.sparse import lil_matrix
 
 from common.dictionary import DictionaryIf

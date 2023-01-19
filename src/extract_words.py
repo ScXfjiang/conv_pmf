@@ -11,14 +11,13 @@ import scipy.sparse
 
 from common.topic_util import NPMIUtil
 from extract_words.model import ExtractWords
-from extract_words.dataset import get_dataset_type
+from extract_words.dataset import Amazon
 from common.dictionary import GloveDict6B
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_type", default="", type=str)
-    parser.add_argument("--train_dataset_path", default="", type=str)
+    parser.add_argument("--dataset_path", default="", type=str)
     parser.add_argument("--token_cnt_mat_path", default="", type=str)
     parser.add_argument("--word_embeds_path", default="", type=str)
     parser.add_argument("--checkpoint_path", default="", type=str)
@@ -40,8 +39,7 @@ def main():
         os.makedirs(log_dir)
 
     with open(os.path.join(log_dir, "hyper_params.txt"), "w") as f:
-        f.write("dataset_type: {}\n".format(args.dataset_type))
-        f.write("train_dataset_path: {}\n".format(args.train_dataset_path))
+        f.write("dataset_path: {}\n".format(args.dataset_path))
         f.write("token_cnt_mat_path: {}\n".format(args.token_cnt_mat_path))
         f.write("word_embeds_path: {}\n".format(args.word_embeds_path))
         f.write("checkpoint_path: {}\n".format(args.checkpoint_path))
@@ -55,10 +53,9 @@ def main():
         f.write("k: {}\n".format(args.k))
 
     dictionary = GloveDict6B(args.word_embeds_path)
-    DatasetT = get_dataset_type(args.dataset_type)
-    train_set = DatasetT(args.train_dataset_path, dictionary, args.n_word,)
+    train_set = Amazon(args.dataset_path, dictionary, args.n_word)
     train_loader = torch.utils.data.DataLoader(
-        dataset=train_set, batch_size=args.batch_size, shuffle=False, drop_last=True,
+        dataset=train_set, batch_size=args.batch_size, shuffle=False, drop_last=True
     )
     stat_dict = torch.load(args.checkpoint_path)
     trained_word_embeds = stat_dict["embedding.weight"]
