@@ -14,17 +14,7 @@ from conv_pmf.dataset import get_dataset_type
 from conv_pmf.data_loader import collate_fn
 from common.dictionary import get_dictionary_type
 from common.word_embeds import get_embeds_type
-
-
-def show_elapsed_time(start, end, label=None):
-    sec = end - start
-    hour = int(sec // 3600)
-    sec = sec - hour * 3600
-    min = int(sec // 60)
-    sec = sec - min * 60
-    print(
-        "{} elapsed time:\t {} hours {} mins {} seconds".format(label, hour, min, sec)
-    )
+from common.util import show_elapsed_time
 
 
 class Trainer(object):
@@ -47,47 +37,54 @@ class Trainer(object):
         self.optimizer = optimizer
         self.val_loader = val_loader
         self.log_dir = log_dir
-        self.train_loss_list = []
-        self.val_loss_list = []
+        self.train_epoch_losses = []
+        self.val_epoch_losses = []
 
     def train_and_val(self):
+        # initialize checkpoint directory
         checkpoint_dir = os.path.join(self.log_dir, "checkpoint")
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
+        # save initialized parameters
         torch.save(
             self.model.state_dict(),
             os.path.join(checkpoint_dir, "initialized_checkpoint.pt"),
         )
+        # train and eval loop
         for epoch_idx in range(1, self.num_epoch + 1):
+            # train epoch
             train_epoch_start = time.time()
             self.train_epoch()
             train_epoch_end = time.time()
             show_elapsed_time(
                 train_epoch_start, train_epoch_end, "Train epoch {}".format(epoch_idx)
             )
+            # eval epoch
             val_epoch_start = time.time()
             self.val_epoch()
             val_epoch_end = time.time()
             show_elapsed_time(
                 val_epoch_start, val_epoch_end, "val epoch {}".format(epoch_idx)
             )
+            # save checkpoint periodically
             if epoch_idx % 10 == 0:
                 torch.save(
                     self.model.state_dict(),
                     os.path.join(checkpoint_dir, "checkpoint_{}.pt".format(epoch_idx)),
                 )
+        # check final checkpoint
         torch.save(
             self.model.state_dict(),
             os.path.join(checkpoint_dir, "checkpoint_final.pt"),
         )
 
+        # save train_loss and val_loss
         with open(os.path.join(self.log_dir, "train_loss"), "wb") as f:
-            pkl.dump(self.train_loss_list, f)
+            pkl.dump(self.train_epoch_losses, f)
         with open(os.path.join(self.log_dir, "val_loss"), "wb") as f:
-            pkl.dump(self.val_loss_list, f)
-
-        plt.plot(self.train_loss_list, label="train", linewidth=1)
-        plt.plot(self.val_loss_list, label="val", linewidth=1)
+            pkl.dump(self.val_epoch_losses, f)
+        plt.plot(self.train_epoch_losses, label="train", linewidth=1)
+        plt.plot(self.val_epoch_losses, label="val", linewidth=1)
         plt.legend(loc="upper right")
         plt.xlabel("num of epoch")
         plt.ylabel("MSE")
@@ -97,12 +94,13 @@ class Trainer(object):
     def train_epoch(self):
         self.model.train()
         self.model.cuda()
-        cur_losses = []
+        batch_losses = []
         for user_indices, docs, gt_ratings in self.train_loader:
             user_indices = user_indices.to(device="cuda")
             docs = [doc.to(device="cuda") for doc in docs]
             gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
             self.optimizer.zero_grad()
+            # forward
             if self.with_entropy:
                 estimate_ratings, entropy = self.model(user_indices, docs, True)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
@@ -111,25 +109,27 @@ class Trainer(object):
                 estimate_ratings = self.model(user_indices, docs, False)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse
-            cur_losses.append(mse)
+            batch_losses.append(mse)
+            # backward
             loss.backward()
+            # model update
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
-        self.train_loss_list.append(float(sum(cur_losses) / len(cur_losses)))
+        self.train_epoch_losses.append(float(sum(batch_losses) / len(batch_losses)))
 
     def val_epoch(self):
         with torch.no_grad():
             self.model.eval()
             self.model.cuda()
-            cur_losses = []
+            batch_losses = []
             for user_indices, docs, gt_ratings in self.val_loader:
                 user_indices = user_indices.to(device="cuda")
                 docs = [doc.to(device="cuda") for doc in docs]
                 gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
                 estimate_ratings = self.model(user_indices, docs, with_entropy=False)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
-                cur_losses.append(mse)
-            self.val_loss_list.append(float(sum(cur_losses) / len(cur_losses)))
+                batch_losses.append(mse)
+            self.val_epoch_losses.append(float(sum(batch_losses) / len(batch_losses)))
 
 
 def main():
@@ -157,6 +157,7 @@ def main():
     args = parser.parse_args()
     with_entropy = True if args.with_entropy == "True" else False
 
+    # initialize log dir: dataset + datetime + uuid
     today = date.today()
     date_str = today.strftime("%b-%d-%Y")
     time_str = time.strftime("%H-%M-%S", time.localtime())
@@ -164,6 +165,8 @@ def main():
     log_dir = os.path.join(args.dataset_type, datetime_str + "-" + str(uuid.uuid4()))
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
+
+    # save all command args
     with open(os.path.join(log_dir, "hyper_params.txt"), "w") as f:
         f.write("dataset_type: {}\n".format(args.dataset_type))
         f.write("train_dataset_path: {}\n".format(args.train_dataset_path))
