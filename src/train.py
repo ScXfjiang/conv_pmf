@@ -3,11 +3,10 @@ import os
 import time
 from datetime import date
 
-
 import torch
 import pickle as pkl
-import matplotlib.pyplot as plt
 import uuid
+import matplotlib.pyplot as plt
 
 from conv_pmf.model import ConvPMF
 from conv_pmf.dataset import get_dataset_type
