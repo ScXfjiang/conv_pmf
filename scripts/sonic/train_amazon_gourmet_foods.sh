@@ -33,8 +33,7 @@ for idx in 1; do
             --window_size=5 \
             --n_word=128 \
             --n_factor=32 \
-            --with_entropy=False \
-            --epsilon=1e-5 \
+            --epsilon=0.0 \
             --lr=0.1 \
             --momentum=0.9 \
             --weight_decay=0.0001 &

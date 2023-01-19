@@ -25,7 +25,5 @@ python ../../src/extract_words.py \
     --window_size=5 \
     --n_word=128 \
     --n_factor=32 \
-    --with_entropy=False \
-    --entropy_threshold=0.0 \
     --least_act_num=50 \
     --k=30

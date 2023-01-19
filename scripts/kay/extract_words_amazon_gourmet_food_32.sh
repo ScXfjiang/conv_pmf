@@ -41,8 +41,6 @@ for checkpoint in ${checkpoint_files}; do
         --window_size=5 \
         --n_word=128 \
         --n_factor=32 \
-        --with_entropy=False \
-        --entropy_threshold=0 \
         --least_act_num=50 \
         --k=30
 done

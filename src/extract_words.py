@@ -25,12 +25,10 @@ def main():
     parser.add_argument("--window_size", default=5, type=int)
     parser.add_argument("--n_word", default=128, type=int)
     parser.add_argument("--n_factor", default=32, type=int)
-    parser.add_argument("--with_entropy", default="", type=str)
-    parser.add_argument("--entropy_threshold", type=float, default=0.5)
+    parser.add_argument("--entropy_threshold", type=float, default=float("inf"))
     parser.add_argument("--least_act_num", default=200, type=int)
     parser.add_argument("--k", default=30, type=int)
     args = parser.parse_args()
-    with_entropy = True if args.with_entropy == "True" else False
 
     # initialize log dir: datetime + uuid
     date_str = date.today().strftime("%b-%d-%Y")
@@ -49,7 +47,6 @@ def main():
         f.write("window_size: {}\n".format(args.window_size))
         f.write("n_word: {}\n".format(args.n_word))
         f.write("n_factor: {}\n".format(args.n_factor))
-        f.write("with_entropy: {}\n".format(with_entropy))
         f.write("entropy_threshold: {}\n".format(args.entropy_threshold))
         f.write("least_act_num: {}\n".format(args.least_act_num))
         f.write("k: {}\n".format(args.k))
@@ -71,8 +68,7 @@ def main():
     factor2token2act_stat = {}
     for factor in range(args.n_factor):
         factor2token2act_stat[factor] = {}
-    if with_entropy:
-        entropy_list = []
+    entropy_list = []
     for reviews in train_loader:
         reviews = reviews.to(device="cuda")
         # [n_factor, batch_size, n_words]
@@ -82,31 +78,31 @@ def main():
             for review_idx in range(args.batch_size):
                 # [n_words,]
                 cur_activations = activations[factor][review_idx]
-                if with_entropy:
-                    prob_dist = torch.nn.functional.softmax(cur_activations, dim=0)
-                    entropy = -torch.sum(prob_dist * torch.log(prob_dist))
-                    entropy_list.append(float(entropy.detach().cpu().numpy()))
-                    if entropy > args.entropy_threshold:
-                        continue
-                cur_activations = cur_activations.detach().cpu().numpy()
-                # [n_words,]
-                cur_tokens = reviews[review_idx].detach().cpu().numpy()
-                assert cur_activations.shape == cur_tokens.shape
-                for act_idx in range(cur_tokens.shape[0]):
-                    act_val = cur_activations[act_idx]
-                    act_tokens = []
-                    act_tokens.append(cur_tokens[act_idx])
-                    for offset in range(1, (args.window_size - 1) // 2 + 1):
-                        if act_idx - offset >= 0:
-                            act_tokens.append(cur_tokens[act_idx - offset])
-                        if act_idx + offset < cur_tokens.shape[0]:
-                            act_tokens.append(cur_tokens[act_idx + offset])
-                    for token in act_tokens:
-                        if token in token2act_stat:
-                            token2act_stat[token][0] += act_val
-                            token2act_stat[token][1] += 1
-                        else:
-                            token2act_stat[token] = [act_val, 1]
+                # calculate entropy
+                prob_dist = torch.nn.functional.softmax(cur_activations, dim=0)
+                entropy = -torch.sum(prob_dist * torch.log(prob_dist))
+                entropy_list.append(float(entropy.detach().cpu().numpy()))
+                # only condiser reviews with small entropy
+                if entropy <= args.entropy_threshold:
+                    cur_activations = cur_activations.detach().cpu().numpy()
+                    # [n_words,]
+                    cur_tokens = reviews[review_idx].detach().cpu().numpy()
+                    assert cur_activations.shape == cur_tokens.shape
+                    for act_idx in range(cur_tokens.shape[0]):
+                        act_val = cur_activations[act_idx]
+                        act_tokens = []
+                        act_tokens.append(cur_tokens[act_idx])
+                        for offset in range(1, (args.window_size - 1) // 2 + 1):
+                            if act_idx - offset >= 0:
+                                act_tokens.append(cur_tokens[act_idx - offset])
+                            if act_idx + offset < cur_tokens.shape[0]:
+                                act_tokens.append(cur_tokens[act_idx + offset])
+                        for token in act_tokens:
+                            if token in token2act_stat:
+                                token2act_stat[token][0] += act_val
+                                token2act_stat[token][1] += 1
+                            else:
+                                token2act_stat[token] = [act_val, 1]
             factor2token2act_stat[factor] = token2act_stat
 
     # 2. extract words by average activation value
@@ -154,12 +150,11 @@ def main():
         f.write("avg npmi: {}\n".format(avg_npmi))
         for factor, npmi in enumerate(list(npmis)):
             f.write("factor {}: {}\n".format(factor, npmi))
-    if with_entropy:
-        with open(os.path.join(log_dir, "entropy_stat.txt"), "w") as f:
-            f.write("entropy mean: {}\n".format(np.mean(entropy_list)))
-            f.write("entropy median: {}\n".format(np.median(entropy_list)))
-            f.write("entropy min: {}\n".format(np.min(entropy_list)))
-            f.write("entropy max: {}\n".format(np.max(entropy_list)))
+    with open(os.path.join(log_dir, "entropy_stat.txt"), "w") as f:
+        f.write("entropy mean: {}\n".format(np.mean(entropy_list)))
+        f.write("entropy median: {}\n".format(np.median(entropy_list)))
+        f.write("entropy min: {}\n".format(np.min(entropy_list)))
+        f.write("entropy max: {}\n".format(np.max(entropy_list)))
 
 
 if __name__ == "__main__":

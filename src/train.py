@@ -20,7 +20,6 @@ class Trainer(object):
     def __init__(
         self,
         model,
-        with_entropy,
         epsilon,
         train_loader,
         num_epoch,
@@ -29,12 +28,7 @@ class Trainer(object):
         log_dir,
     ):
         self.model = model
-        self.with_entropy = with_entropy
         self.epsilon = epsilon
-        if self.with_entropy:
-            assert self.epsilon > 0
-        else:
-            assert self.epsilon == 0
         self.train_loader = train_loader
         self.num_epoch = num_epoch
         self.optimizer = optimizer
@@ -104,14 +98,16 @@ class Trainer(object):
             gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
             self.optimizer.zero_grad()
             # forward
-            if self.with_entropy:
-                estimate_ratings, entropy = self.model(user_indices, docs, True)
+            if self.epsilon > 0:
+                estimate_ratings, entropy = self.model(user_indices, docs, with_entropy=True)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse + self.epsilon * entropy
-            else:
-                estimate_ratings = self.model(user_indices, docs, False)
+            elif self.epsilon == 0.0:
+                estimate_ratings = self.model(user_indices, docs, with_entropy=False)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse
+            else:
+                raise ValueError("epsilon must be greater or equal to 0")
             batch_losses.append(mse)
             # backward
             loss.backward()
@@ -148,13 +144,11 @@ def main():
     parser.add_argument("--window_size", default=5, type=int)
     parser.add_argument("--n_word", default=128, type=int)
     parser.add_argument("--n_factor", default=32, type=int)
-    parser.add_argument("--with_entropy", default="", type=str)
     parser.add_argument("--epsilon", type=float, default=1e-4)
     parser.add_argument("--lr", type=float, default=1.0)
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
     args = parser.parse_args()
-    with_entropy = True if args.with_entropy == "True" else False
 
     # initialize log dir: datetime + uuid
     today = date.today()
@@ -185,7 +179,6 @@ def main():
         f.write("window_size: {}\n".format(args.window_size))
         f.write("n_word: {}\n".format(args.n_word))
         f.write("n_factor: {}\n".format(args.n_factor))
-        f.write("with_entropy: {}\n".format(with_entropy))
         f.write("epsilon: {}\n".format(args.epsilon))
         f.write("optimizer: {}\n".format("SGD"))
         f.write("lr: {}\n".format(args.lr))
@@ -246,7 +239,6 @@ def main():
     )
     trainer = Trainer(
         model,
-        with_entropy,
         args.epsilon,
         train_loader,
         args.num_epoch,

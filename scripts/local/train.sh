@@ -14,8 +14,7 @@ python ../../src/train.py \
     --window_size=5 \
     --n_word=128 \
     --n_factor=8 \
-    --with_entropy=False \
-    --epsilon=1e-4 \
+    --epsilon=0.0 \
     --lr=0.1 \
     --momentum=0.9 \
     --weight_decay=0.0001
