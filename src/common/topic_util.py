@@ -6,7 +6,7 @@ from scipy.sparse import lil_matrix
 from common.dictionary import DictionaryIf
 
 
-def create_sparse_token_cnt_mat(dataset_path, dictionary):
+def gen_sparse_token_cnt_mat(dataset_path, dictionary):
     """
     Args:
         dataset_path (str): Amazon dataset
