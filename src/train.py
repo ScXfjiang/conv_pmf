@@ -109,9 +109,10 @@ class Trainer(object):
                 docs = [doc.to(device="cuda") for doc in docs]
                 gt_ratings = gt_ratings.to(device="cuda")
             self.optimizer.zero_grad()
-            estimate_ratings, entropy = self.model(
-                user_indices, docs, with_entropy=self.with_entropy
-            )
+            if self.with_entropy:
+                estimate_ratings, entropy = self.model(user_indices, docs, True)
+            else:
+                estimate_ratings = self.model(user_indices, docs, False)
             gt_ratings = gt_ratings.to(torch.float32)
             mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
             if self.with_entropy:
@@ -137,7 +138,7 @@ class Trainer(object):
                     user_indices = user_indices.to(device="cuda")
                     docs = [doc.to(device="cuda") for doc in docs]
                     gt_ratings = gt_ratings.to(device="cuda")
-                estimate_ratings, _ = self.model(user_indices, docs, with_entropy=False)
+                estimate_ratings = self.model(user_indices, docs, with_entropy=False)
                 gt_ratings = gt_ratings.to(torch.float32)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 cur_losses.append(mse)
