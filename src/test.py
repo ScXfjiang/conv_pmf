@@ -12,9 +12,7 @@ from common.word_embeds import GloveEmbeds
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_dataset_path", default="", type=str)
-    parser.add_argument("--val_dataset_path", default="", type=str)
-    parser.add_argument("--test_dataset_path", default="", type=str)
+    parser.add_argument("--dataset_path", default="", type=str)
     parser.add_argument("--checkpoint_path", default="", type=str)
     parser.add_argument("--word_embeds_path", default="", type=str)
     parser.add_argument("--global_user_id2global_user_idx", default="", type=str)
@@ -32,9 +30,7 @@ def main():
     with open(args.global_item_id2global_item_idx, "rb") as f:
         global_item_id2global_item_idx = pkl.load(f)
     test_set = Amazon(
-        args.train_dataset_path,
-        args.val_dataset_path,
-        args.test_dataset_path,
+        args.dataset_path,
         "test",
         dictionary,
         args.n_word,
