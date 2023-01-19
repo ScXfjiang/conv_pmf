@@ -57,7 +57,9 @@ class Amazon(DatasetIf):
         self.mode = mode
         self.dictionary = dictionary
         self.n_token = n_token
+        # global_user_id2global_user_idx is used for gather user embeddings
         self.user_id2user_idx = global_user_id2global_user_idx
+        # global_item_id2global_item_idx is not used for now
         self.item_id2item_idx = global_item_id2global_item_idx
         self.train_df = self.get_dataframe(os.path.join(path, "train.json"))
         self.val_df = self.get_dataframe(os.path.join(path, "val.json"))
@@ -76,6 +78,7 @@ class Amazon(DatasetIf):
             user_id, item_id, rating, tokens = self.train_df.iloc[idx]
             full_doc = self.item_id2doc[item_id]
             for idx in range(full_doc.shape[0]):
+                # delete the text review in this record
                 if (full_doc[idx] == tokens).all():
                     doc = np.delete(full_doc, idx, axis=0)
                     break
