@@ -25,6 +25,7 @@ class ConvPMF(nn.Module):
         )
         self.n_factor = n_factor
         self.tanh = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
         self.softmax_last_dim = nn.Softmax(dim=-1)
         self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True)
         self.rating_mean = rating_mean
@@ -170,9 +171,9 @@ class ConvPMF(nn.Module):
                 # [1, n_factor]
                 item_embed = torch.mean(
                     torch.max(feature_map, dim=-1, keepdim=False).values,
-                    dim=0,
-                    keepdim=True,
-                )
+                    dim=-1,
+                    keepdim=False,
+                ).unsqueeze(0)
             else:
                 # deal with empty doc -> use self.bias as estimate rating
                 item_embed = torch.zeros(
