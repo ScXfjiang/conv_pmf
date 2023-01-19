@@ -32,12 +32,14 @@ def main():
     args = parser.parse_args()
     with_entropy = True if args.with_entropy == "True" else False
 
+    # initialize log dir: datetime + uuid
     date_str = date.today().strftime("%b-%d-%Y")
     time_str = time.strftime("%H-%M-%S", time.localtime())
     log_dir = date_str + "-" + time_str + "-" + str(uuid.uuid4())
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
+    # save all command args
     with open(os.path.join(log_dir, "hyper_params.txt"), "w") as f:
         f.write("dataset_path: {}\n".format(args.dataset_path))
         f.write("token_cnt_mat_path: {}\n".format(args.token_cnt_mat_path))
