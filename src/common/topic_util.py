@@ -26,8 +26,6 @@ def gen_sparse_token_cnt_mat(dataset_path, dictionary):
                 token_idx = dictionary.word2idx(token)
                 token_cnt_mat[doc_idx, token_idx] += 1
 
-        # scipy.sparse.save_npz(save_path, token_cnt_mat)
-
         return token_cnt_mat.tocsr()
 
 
