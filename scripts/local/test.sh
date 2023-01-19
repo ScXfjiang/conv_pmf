@@ -21,6 +21,5 @@ for checkpoint in ${checkpoint_files}; do
         --test_batch_size=256 \
         --window_size=5 \
         --n_word=128 \
-        --n_factor=${N_FACTOR} \
-        --use_cuda=True
+        --n_factor=${N_FACTOR}
 done

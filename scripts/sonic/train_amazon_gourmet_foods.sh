@@ -33,8 +33,7 @@ for idx in 1; do
             --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \
             --shuffle=True \
             --train_batch_size=256 \
-            --val_batch_size=256 \
-            --num_epoch=60 \
+             --num_epoch=60 \
             --window_size=5 \
             --n_word=128 \
             --n_factor=32 \
@@ -42,8 +41,7 @@ for idx in 1; do
             --epsilon=1e-5 \
             --lr=0.1 \
             --momentum=0.9 \
-            --weight_decay=0.0001 \
-            --use_cuda=True &
+            --weight_decay=0.0001 &
     done
     for JOB in $(jobs -p); do
         wait ${JOB}

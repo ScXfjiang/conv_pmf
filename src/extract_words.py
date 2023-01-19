@@ -31,10 +31,8 @@ def main():
     parser.add_argument("--entropy_threshold", type=float, default=0.5)
     parser.add_argument("--least_act_num", default=200, type=int)
     parser.add_argument("--k", default=30, type=int)
-    parser.add_argument("--use_cuda", default="", type=str)
     args = parser.parse_args()
     with_entropy = True if args.with_entropy == "True" else False
-    use_cuda = True if args.use_cuda == "True" else False
 
     date_str = date.today().strftime("%b-%d-%Y")
     time_str = time.strftime("%H-%M-%S", time.localtime())
@@ -78,9 +76,8 @@ def main():
     for factor in range(args.n_factor):
         factor2token2act_stat[factor] = {}
     entropy_list = []
-    for _, reviews in enumerate(train_loader):
-        if torch.cuda.is_available() and use_cuda:
-            reviews = reviews.to(device="cuda")
+    for reviews in train_loader:
+        reviews = reviews.to(device="cuda")
         # [n_factor, batch_size, n_words]
         activations = model(reviews)
         for factor in range(args.n_factor):
@@ -126,12 +123,8 @@ def main():
                 continue
             token_list.append(word)
             avg_act_value_list.append(float(float(act_sum) / act_cnt))
-        tokens = torch.as_tensor(np.array(token_list))
-        if torch.cuda.is_available() and use_cuda:
-            tokens = tokens.to(device="cuda")
-        avg_act_values = torch.as_tensor(np.array(avg_act_value_list))
-        if torch.cuda.is_available() and use_cuda:
-            avg_act_values = avg_act_values.to(device="cuda")
+        tokens = torch.as_tensor(np.array(token_list)).to(device="cuda")
+        avg_act_values = torch.as_tensor(np.array(avg_act_value_list)).to(device="cuda")
         indices = (
             torch.topk(avg_act_values, k=args.k).indices
             if args.k <= avg_act_values.shape[0]

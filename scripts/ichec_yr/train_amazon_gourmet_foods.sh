@@ -42,8 +42,7 @@ for idx in 1; do
             --epsilon=1e-5 \
             --lr=0.1 \
             --momentum=0.9 \
-            --weight_decay=0.0001 \
-            --use_cuda=True &
+            --weight_decay=0.0001 &
     done
     for JOB in $(jobs -p); do
         wait ${JOB}

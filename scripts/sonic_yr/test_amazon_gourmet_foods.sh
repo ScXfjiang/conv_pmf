@@ -30,6 +30,5 @@ for LOG_DIR in Sep-10-2022-17-28-52 Sep-10-2022-17-56-25 Sep-11-2022-12-40-31 Se
         --test_batch_size=256 \
         --window_size=5 \
         --n_word=128 \
-        --n_factor=32 \
-        --use_cuda=True
+        --n_factor=32
 done

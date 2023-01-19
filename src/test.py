@@ -25,9 +25,7 @@ def main():
     parser.add_argument("--window_size", default=5, type=int)
     parser.add_argument("--n_word", default=128, type=int)
     parser.add_argument("--n_factor", default=32, type=int)
-    parser.add_argument("--use_cuda", default="", type=str)
     args = parser.parse_args()
-    use_cuda = True if args.use_cuda == "True" else False
 
     DictionaryT = get_dictionary_type(args.word_embeds_type)
     dictionary = DictionaryT(args.word_embeds_path)
@@ -63,18 +61,13 @@ def main():
     model.load_state_dict(torch.load(args.checkpoint_path))
     with torch.no_grad():
         model.eval()
-        if torch.cuda.is_available() and use_cuda:
-            model.cuda()
-        else:
-            model.cpu()
+        model.cuda()
         losses = []
-        for _, (user_indices, docs, gt_ratings) in enumerate(test_loader):
-            if torch.cuda.is_available() and use_cuda:
-                user_indices = user_indices.to(device="cuda")
-                docs = [doc.to(device="cuda") for doc in docs]
-                gt_ratings = gt_ratings.to(device="cuda")
-            estimate_ratings, _ = model(user_indices, docs, with_entropy=False)
-            gt_ratings = gt_ratings.to(torch.float32)
+        for user_indices, docs, gt_ratings in test_loader:
+            user_indices = user_indices.to(device="cuda")
+            docs = [doc.to(device="cuda") for doc in docs]
+            gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
+            estimate_ratings = model(user_indices, docs, with_entropy=False)
             mse = torch.nn.functional.mse_loss(
                 estimate_ratings, gt_ratings, reduction="sum"
             )

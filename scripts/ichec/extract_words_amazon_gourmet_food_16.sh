@@ -46,6 +46,5 @@ for checkpoint in ${checkpoint_files}; do
         --with_entropy=False \
         --entropy_threshold=0 \
         --least_act_num=50 \
-        --k=30 \
-        --use_cuda=True
+        --k=30
 done

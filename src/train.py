@@ -37,7 +37,6 @@ class Trainer(object):
         num_epoch,
         optimizer,
         val_loader,
-        use_cuda,
         log_dir,
     ):
         self.model = model
@@ -47,7 +46,6 @@ class Trainer(object):
         self.num_epoch = num_epoch
         self.optimizer = optimizer
         self.val_loader = val_loader
-        self.use_cuda = use_cuda
         self.log_dir = log_dir
         self.train_loss_list = []
         self.val_loss_list = []
@@ -98,26 +96,20 @@ class Trainer(object):
 
     def train_epoch(self):
         self.model.train()
-        if torch.cuda.is_available() and self.use_cuda:
-            self.model.cuda()
-        else:
-            self.model.cpu()
+        self.model.cuda()
         cur_losses = []
-        for _, (user_indices, docs, gt_ratings) in enumerate(self.train_loader):
-            if torch.cuda.is_available() and self.use_cuda:
-                user_indices = user_indices.to(device="cuda")
-                docs = [doc.to(device="cuda") for doc in docs]
-                gt_ratings = gt_ratings.to(device="cuda")
+        for user_indices, docs, gt_ratings in self.train_loader:
+            user_indices = user_indices.to(device="cuda")
+            docs = [doc.to(device="cuda") for doc in docs]
+            gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
             self.optimizer.zero_grad()
             if self.with_entropy:
                 estimate_ratings, entropy = self.model(user_indices, docs, True)
-            else:
-                estimate_ratings = self.model(user_indices, docs, False)
-            gt_ratings = gt_ratings.to(torch.float32)
-            mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
-            if self.with_entropy:
+                mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse + self.epsilon * entropy
             else:
+                estimate_ratings = self.model(user_indices, docs, False)
+                mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse
             cur_losses.append(mse)
             loss.backward()
@@ -128,18 +120,13 @@ class Trainer(object):
     def val_epoch(self):
         with torch.no_grad():
             self.model.eval()
-            if torch.cuda.is_available() and self.use_cuda:
-                self.model.cuda()
-            else:
-                self.model.cpu()
+            self.model.cuda()
             cur_losses = []
-            for _, (user_indices, docs, gt_ratings) in enumerate(self.val_loader):
-                if torch.cuda.is_available() and self.use_cuda:
-                    user_indices = user_indices.to(device="cuda")
-                    docs = [doc.to(device="cuda") for doc in docs]
-                    gt_ratings = gt_ratings.to(device="cuda")
+            for user_indices, docs, gt_ratings in self.val_loader:
+                user_indices = user_indices.to(device="cuda")
+                docs = [doc.to(device="cuda") for doc in docs]
+                gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
                 estimate_ratings = self.model(user_indices, docs, with_entropy=False)
-                gt_ratings = gt_ratings.to(torch.float32)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 cur_losses.append(mse)
             self.val_loss_list.append(float(sum(cur_losses) / len(cur_losses)))
@@ -167,10 +154,8 @@ def main():
     parser.add_argument("--lr", type=float, default=1.0)
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
-    parser.add_argument("--use_cuda", default="", type=str)
     args = parser.parse_args()
     with_entropy = True if args.with_entropy == "True" else False
-    use_cuda = True if args.use_cuda == "True" else False
 
     today = date.today()
     date_str = today.strftime("%b-%d-%Y")
@@ -276,7 +261,6 @@ def main():
         args.num_epoch,
         optimizer,
         val_loader,
-        use_cuda,
         log_dir,
     )
     trainer.train_and_val()

@@ -30,5 +30,4 @@ python ../../src/extract_words.py \
     --with_entropy=False \
     --entropy_threshold=0.0 \
     --least_act_num=50 \
-    --k=30 \
-    --use_cuda=True
+    --k=30
