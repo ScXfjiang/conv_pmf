@@ -18,14 +18,7 @@ from common.util import show_elapsed_time
 
 class Trainer(object):
     def __init__(
-        self,
-        model,
-        epsilon,
-        train_loader,
-        num_epoch,
-        optimizer,
-        val_loader,
-        log_dir,
+        self, model, epsilon, train_loader, num_epoch, optimizer, val_loader, log_dir,
     ):
         self.model = model
         self.epsilon = epsilon
@@ -99,7 +92,9 @@ class Trainer(object):
             self.optimizer.zero_grad()
             # forward
             if self.epsilon > 0:
-                estimate_ratings, entropy = self.model(user_indices, docs, with_entropy=True)
+                estimate_ratings, entropy = self.model(
+                    user_indices, docs, with_entropy=True
+                )
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse + self.epsilon * entropy
             elif self.epsilon == 0.0:
