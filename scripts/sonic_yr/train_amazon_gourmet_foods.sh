@@ -1,4 +1,4 @@
-#!/home/people/22204923/anaconda3/bin/zsh
+#!/bin/bash -l
 #SBATCH --job-name=maskrcnn
 # speficity number of nodes
 #SBATCH -N 1
