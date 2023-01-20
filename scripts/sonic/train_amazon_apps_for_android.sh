@@ -1,4 +1,4 @@
-#!/bin/bash -l
+#!/home/people/22200056/bin/zsh
 #SBATCH --job-name=conv_pmf
 # speficity number of nodes
 #SBATCH -N 1
