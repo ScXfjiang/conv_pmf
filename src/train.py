@@ -91,7 +91,7 @@ class Trainer(object):
             gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
             self.optimizer.zero_grad()
             # forward
-            if self.epsilon > 0:
+            if self.epsilon > 0.0:
                 estimate_ratings, entropy = self.model(
                     user_indices, docs, with_entropy=True
                 )
