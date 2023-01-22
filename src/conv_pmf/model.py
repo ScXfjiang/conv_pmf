@@ -208,7 +208,7 @@ class ConvPMF(nn.Module):
             if doc.shape[0] != 0:
                 # [num_review, embed_len, num_word]
                 review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
-                # [n_factor, num_review, num_word]ß
+                # [n_factor, num_review, num_word]
                 feature_map = torch.permute(
                     self.softmax_last_dim(self.conv1d(review_embeds)), (1, 0, 2)
                 )
