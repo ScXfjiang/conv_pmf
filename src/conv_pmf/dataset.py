@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import torch
 import nltk
-nltk.download('punkt')
 
 
 class DatasetIf(torch.utils.data.Dataset):
