@@ -66,7 +66,7 @@ class ConvPMF(nn.Module):
                 # [num_review, embed_len, num_word]
                 review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
                 # [num_review, n_factor, num_word]
-                feature_map = self.tanh(self.conv1d(review_embeds))
+                feature_map = self.softmax_last_dim(self.conv1d(review_embeds))
                 # [1, n_factor]
                 item_embed = torch.mean(
                     torch.max(feature_map, dim=-1, keepdim=False).values,
@@ -74,9 +74,7 @@ class ConvPMF(nn.Module):
                     keepdim=True,
                 )
                 # [doc_total_num_review, num_word]
-                prob_dist = self.softmax_last_dim(
-                    torch.reshape(feature_map, (-1, feature_map.shape[-1]))
-                )
+                prob_dist = torch.reshape(feature_map, (-1, feature_map.shape[-1]))
                 entropy_sum += -torch.sum(prob_dist * torch.log(prob_dist))
                 num_entropy += prob_dist.shape[0]
             else:
@@ -107,7 +105,7 @@ class ConvPMF(nn.Module):
                 # [num_review, embed_len, num_word]
                 review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
                 # [num_review, n_factor, num_word]
-                feature_map = self.tanh(self.conv1d(review_embeds))
+                feature_map = self.softmax_last_dim(self.conv1d(review_embeds))
                 # [1, n_factor]
                 item_embed = torch.mean(
                     torch.max(feature_map, dim=-1, keepdim=False).values,
@@ -143,7 +141,7 @@ class ConvPMF(nn.Module):
                 review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
                 # [n_factor, num_review, num_word]
                 feature_map = torch.permute(
-                    self.tanh(self.conv1d(review_embeds)), (1, 0, 2)
+                    self.softmax_last_dim(self.conv1d(review_embeds)), (1, 0, 2)
                 )
 
                 # filter out reviews with high entropy
@@ -152,10 +150,8 @@ class ConvPMF(nn.Module):
                     feature_map.shape[1],
                     feature_map.shape[2],
                 )
-                # [n_factor, num_review, num_word]
-                prob_dist = self.softmax_last_dim(feature_map)
                 # [n_factor, num_review]
-                entropy = -torch.sum(prob_dist * torch.log(prob_dist), dim=-1)
+                entropy = -torch.sum(feature_map * torch.log(feature_map), dim=-1)
                 # [n_factor, num_review * quantile]
                 num_review = math.ceil(num_review * quantile)
                 indices = torch.topk(
@@ -200,19 +196,16 @@ class ConvPMF(nn.Module):
             if doc.shape[0] != 0:
                 # [num_review, embed_len, num_word]
                 review_embeds = torch.permute(self.embedding(doc), (0, 2, 1))
-                # [n_factor, num_review, num_word]
+                # [n_factor, num_review, num_word]ß
                 feature_map = torch.permute(
-                    self.tanh(self.conv1d(review_embeds)), (1, 0, 2)
+                    self.softmax_last_dim(self.conv1d(review_embeds)), (1, 0, 2)
                 )
                 # [n_factor, num_review]
                 max_values = torch.max(feature_map, dim=-1, keepdim=False).values
-                # [n_factor, num_review, num_word]
-                prob_dist = self.softmax_last_dim(feature_map)
                 # [n_factor, num_review]
-                entropy = -torch.sum(prob_dist * torch.log(prob_dist), dim=-1)
-                normalized_entropy = self.sigmoid(
-                    entropy - torch.mean(entropy, dim=-1, keepdim=True)
-                )
+                entropy = -torch.sum(feature_map * torch.log(feature_map), dim=-1)
+                # z-score: [n_factor, num_review]
+                normalized_entropy = (entropy - torch.mean(entropy, dim=-1, keepdim=True)) / torch.std(entropy, dim=-1, keepdim=True)
                 # [n_factor, num_review]
                 entropy_weights = self.softmax_last_dim(1 / normalized_entropy)
                 # [1, n_factor]
