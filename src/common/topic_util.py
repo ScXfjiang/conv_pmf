@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import nltk
+nltk.download('punkt')
 from scipy.sparse import lil_matrix
 
 from common.dictionary import DictionaryIf
