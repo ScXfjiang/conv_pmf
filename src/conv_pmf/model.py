@@ -5,16 +5,24 @@ import math
 
 class ConvPMF(nn.Module):
     def __init__(
-        self, num_user, n_factor, word_embeds, window_size, rating_mean, rating_std,
+        self,
+        num_user,
+        n_factor,
+        word_embeds,
+        window_size,
+        rating_mean,
+        rating_std,
     ):
         super(ConvPMF, self).__init__()
         # [num_user, n_factor]
         self.w_user = nn.parameter.Parameter(
-            torch.empty((num_user, n_factor)), requires_grad=True,
+            torch.empty((num_user, n_factor)),
+            requires_grad=True,
         )
         # [voc_size, embed_length]
         self.embedding = nn.Embedding.from_pretrained(
-            embeddings=torch.as_tensor(word_embeds.embed_matrix()), freeze=False,
+            embeddings=torch.as_tensor(word_embeds.embed_matrix()),
+            freeze=False,
         )
         self.conv1d = nn.Conv1d(
             in_channels=word_embeds.embed_dim(),
@@ -155,7 +163,11 @@ class ConvPMF(nn.Module):
                 # [n_factor, num_review * quantile]
                 num_review = math.ceil(num_review * quantile)
                 indices = torch.topk(
-                    entropy, k=num_review, dim=-1, largest=False, sorted=False,
+                    entropy,
+                    k=num_review,
+                    dim=-1,
+                    largest=False,
+                    sorted=False,
                 ).indices
                 # [n_factor, num_review * quantile, num_word]
                 feature_map = torch.gather(
@@ -204,14 +216,14 @@ class ConvPMF(nn.Module):
                 max_values = torch.max(feature_map, dim=-1, keepdim=False).values
                 # [n_factor, num_review]
                 entropy = -torch.sum(feature_map * torch.log(feature_map), dim=-1)
-                # z-score: [n_factor, num_review]
-                normalized_entropy = (entropy - torch.mean(entropy, dim=-1, keepdim=True)) / torch.std(entropy, dim=-1, keepdim=True)
+                # [n_factor, num_review], zscore
+                zscore = (
+                    entropy - torch.mean(entropy, dim=-1, keepdim=True)
+                ) / torch.std(entropy, dim=-1, keepdim=True)
                 # [n_factor, num_review]
-                entropy_weights = self.softmax_last_dim(1 / normalized_entropy)
+                weights = self.softmax_last_dim(1 / zscore)
                 # [1, n_factor]
-                item_embed = torch.sum(max_values * entropy_weights, dim=-1).unsqueeze(
-                    0
-                )
+                item_embed = torch.sum(max_values * weights, dim=-1).unsqueeze(0)
             else:
                 # deal with empty doc -> use self.bias as estimate rating
                 item_embed = torch.zeros(
