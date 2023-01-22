@@ -17,7 +17,7 @@ cd $SLURM_SUBMIT_DIR
 
 module load cuda/11.3
 
-DATA_PATH="/ichec/work/ucd01/yongru/dataset/amazon/amazon_grocery_and_gourmet_foods1"
+DATA_PATH="/ichec/work/ucd01/yongru/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
 checkpoint_files=()
 checkpoint_files+="/ichec/home/users/yongru/scratch/experiment/conv_pmf_result/baseline_without_entropy/n_factor_128/Oct-26-2022-23-57-32-e860c154-8162-47b5-b7de-458d1c5ce6b1/checkpoint/checkpoint_50.pt"
@@ -33,19 +33,14 @@ checkpoint_files+=" /ichec/home/users/yongru/scratch/experiment/conv_pmf_result/
 
 for checkpoint in ${checkpoint_files}; do
     python ../../src/extract_words.py \
-        --dataset_type="amazon_grocery_and_gourmet_foods" \
-        --train_dataset_path="${DATA_PATH}/train.json" \
+        --dataset_path="${DATA_PATH}" \
         --token_cnt_mat="${DATA_PATH}/token_cnt_mat.npz" \
-        --word_embeds_type="glove.6B.50d" \
         --word_embeds_path="/ichec/work/ucd01/yongru/dataset/glove.6B/glove.6B.50d.txt" \
         --checkpoint_path=${checkpoint} \
         --batch_size=1024 \
         --window_size=5 \
         --n_word=128 \
         --n_factor=128 \
-        --with_entropy=False \
-        --entropy_threshold=0 \
         --least_act_num=50 \
-        --k=30 \
-        --use_cuda=True
+        --k=30
 done

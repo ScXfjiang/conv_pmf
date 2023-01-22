@@ -3,9 +3,13 @@ import os
 
 import argparse
 import numpy as np
+import scipy
 import pandas as pd
 import json
 import pickle as pkl
+
+from common.topic_util import gen_sparse_token_cnt_mat
+from common.dictionary import GloveDict6B
 
 
 class Preprocessor(object):
@@ -35,7 +39,7 @@ class Preprocessor(object):
         with open(os.path.join(self.dst, "test.json"), "wb") as f:
             f.writelines(data[train_size + val_size :])
 
-    def generate_global_maps(self):
+    def gen_global_maps(self):
         """
         Those maps will not change during one train/val/test process
         """
@@ -70,11 +74,26 @@ class Preprocessor(object):
         ) as f:
             pkl.dump(global_item_id2global_item_idx, f)
 
+    def gen_token_cnt_mat(self, word_embeds_path):
+        """
+        This is used for calculating NPMI when extracting topics.
+        Args:
+            dataset_path: the whole Amazon dataset, train + val + test
+            word_embeds_path: used for creating dictionary
+        """
+        token_cnt_mat = gen_sparse_token_cnt_mat(
+            self.src, GloveDict6B(word_embeds_path)
+        )
+        scipy.sparse.save_npz(
+            os.path.join(self.dst, "token_cnt_mat.npz"), token_cnt_mat
+        )
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--src", default="", type=str)
     parser.add_argument("--dst", default="", type=str)
+    parser.add_argument("--word_embeds_path", default="", type=str)
     args = parser.parse_args()
 
     if os.path.exists(args.dst):
@@ -82,9 +101,10 @@ def main():
     else:
         os.makedirs(args.dst)
 
-    proprocessor = Preprocessor(args.src, args.dst)
-    proprocessor.split_amazon(ratios=[0.8, 0.1, 0.1])
-    proprocessor.generate_global_maps()
+    preprocessor = Preprocessor(args.src, args.dst)
+    preprocessor.split_amazon(ratios=[0.8, 0.1, 0.1])
+    preprocessor.gen_global_maps()
+    preprocessor.gen_token_cnt_mat(args.word_embeds_path)
 
 
 if __name__ == "__main__":

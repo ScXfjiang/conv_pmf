@@ -1,3 +1,4 @@
+import os
 import json
 import numpy as np
 import pandas as pd
@@ -5,23 +6,10 @@ import torch
 import torchtext
 
 
-def get_dataset_type(type):
-    if type == "amazon_grocery_and_gourmet_foods":
-        DatasetT = AmazonGroceryAndGourmetFoods
-    elif type == "amazon_apps_for_android":
-        DatasetT = AmazonAppsForAndroid
-    else:
-        raise NotImplementedError
-
-    return DatasetT
-
-
 class DatasetIf(torch.utils.data.Dataset):
     def __init__(
         self,
-        train_path,
-        val_path,
-        test_path,
+        path,
         mode,
         dictionary,
         n_token,
@@ -50,9 +38,7 @@ class Amazon(DatasetIf):
 
     def __init__(
         self,
-        train_path,
-        val_path,
-        test_path,
+        path,
         mode,
         dictionary,
         n_token,
@@ -60,9 +46,7 @@ class Amazon(DatasetIf):
         global_item_id2global_item_idx,
     ):
         super().__init__(
-            train_path,
-            val_path,
-            test_path,
+            path,
             mode,
             dictionary,
             n_token,
@@ -73,11 +57,13 @@ class Amazon(DatasetIf):
         self.mode = mode
         self.dictionary = dictionary
         self.n_token = n_token
+        # global_user_id2global_user_idx is used for gather user embeddings
         self.user_id2user_idx = global_user_id2global_user_idx
+        # global_item_id2global_item_idx is not used for now
         self.item_id2item_idx = global_item_id2global_item_idx
-        self.train_df = self.get_dataframe(train_path)
-        self.val_df = self.get_dataframe(val_path)
-        self.test_df = self.get_dataframe(test_path)
+        self.train_df = self.get_dataframe(os.path.join(path, "train.json"))
+        self.val_df = self.get_dataframe(os.path.join(path, "val.json"))
+        self.test_df = self.get_dataframe(os.path.join(path, "test.json"))
         self.item_id2doc = {}
         for item_id in self.item_id2item_idx.keys():
             df = self.train_df[self.train_df["item_id"] == item_id]
@@ -92,6 +78,7 @@ class Amazon(DatasetIf):
             user_id, item_id, rating, tokens = self.train_df.iloc[idx]
             full_doc = self.item_id2doc[item_id]
             for idx in range(full_doc.shape[0]):
+                # delete the text review in this record
                 if (full_doc[idx] == tokens).all():
                     doc = np.delete(full_doc, idx, axis=0)
                     break
@@ -164,51 +151,3 @@ class Amazon(DatasetIf):
         else:
             raise NotImplementedError
         return df["rating"].std()
-
-
-class AmazonGroceryAndGourmetFoods(Amazon):
-    def __init__(
-        self,
-        train_path,
-        val_path,
-        test_path,
-        mode,
-        dictionary,
-        n_token,
-        global_user_id2global_user_idx,
-        global_item_id2global_item_idx,
-    ):
-        super().__init__(
-            train_path,
-            val_path,
-            test_path,
-            mode,
-            dictionary,
-            n_token,
-            global_user_id2global_user_idx,
-            global_item_id2global_item_idx,
-        )
-
-
-class AmazonAppsForAndroid(Amazon):
-    def __init__(
-        self,
-        train_path,
-        val_path,
-        test_path,
-        mode,
-        dictionary,
-        n_token,
-        global_user_id2global_user_idx,
-        global_item_id2global_item_idx,
-    ):
-        super().__init__(
-            train_path,
-            val_path,
-            test_path,
-            mode,
-            dictionary,
-            n_token,
-            global_user_id2global_user_idx,
-            global_item_id2global_item_idx,
-        )

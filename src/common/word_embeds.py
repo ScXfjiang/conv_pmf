@@ -1,21 +1,6 @@
 import numpy as np
 
 
-def get_embeds_type(type):
-    if type == "glove.6B.50d":
-        EmbedsT = GloveEmbeds50D
-    elif type == "glove.6B.100d":
-        EmbedsT = GloveEmbeds100D
-    elif type == "glove.6B.200d":
-        EmbedsT = GloveEmbeds200D
-    elif type == "glove.6B.300d":
-        EmbedsT = GloveEmbeds300D
-    else:
-        raise NotImplementedError
-
-    return EmbedsT
-
-
 class EmbedsIf(object):
     def __init__(self, path):
         super().__init__()
@@ -55,22 +40,3 @@ class GloveEmbeds(EmbedsIf):
     def embed_dim(self):
         return self.__embed_matrix.shape[1]
 
-
-class GloveEmbeds50D(GloveEmbeds):
-    def __init__(self, path):
-        super().__init__(path)
-
-
-class GloveEmbeds100D(GloveEmbeds):
-    def __init__(self, path):
-        super().__init__(path)
-
-
-class GloveEmbeds200D(GloveEmbeds):
-    def __init__(self, path):
-        super().__init__(path)
-
-
-class GloveEmbeds300D(GloveEmbeds):
-    def __init__(self, path):
-        super().__init__(path)

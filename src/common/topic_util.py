@@ -1,13 +1,12 @@
 import json
 import numpy as np
 import torchtext
-import scipy
 from scipy.sparse import lil_matrix
 
 from common.dictionary import DictionaryIf
 
 
-def create_sparse_token_cnt_mat(dataset_path, dictionary):
+def gen_sparse_token_cnt_mat(dataset_path, dictionary):
     """
     Args:
         dataset_path (str): Amazon dataset
@@ -26,8 +25,6 @@ def create_sparse_token_cnt_mat(dataset_path, dictionary):
             for token in tokens:
                 token_idx = dictionary.word2idx(token)
                 token_cnt_mat[doc_idx, token_idx] += 1
-
-        # scipy.sparse.save_npz(save_path, token_cnt_mat)
 
         return token_cnt_mat.tocsr()
 
