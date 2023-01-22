@@ -3,7 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 import torch
-import torchtext
+import nltk
 
 
 class DatasetIf(torch.utils.data.Dataset):
@@ -64,8 +64,7 @@ class Amazon(DatasetIf):
         return self.data.shape[0]
 
     def tokenize(self, text_review):
-        tokenizer = torchtext.data.get_tokenizer("basic_english")
-        words = tokenizer(text_review)
+        words = nltk.word_tokenize(text_review)
         tokens = [self.dictionary.word2idx(word) for word in words]
         if self.n_token > len(tokens):
             tokens = tokens + [self.dictionary.padding_idx()] * (
