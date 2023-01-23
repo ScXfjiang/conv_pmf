@@ -32,8 +32,6 @@ class ConvPMF(nn.Module):
             bias=False,  # only calculate activation, no need for bias
         )
         self.n_factor = n_factor
-        self.tanh = nn.Tanh()
-        self.sigmoid = nn.Sigmoid()
         self.softmax_last_dim = nn.Softmax(dim=-1)
         self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True)
         self.rating_mean = rating_mean
