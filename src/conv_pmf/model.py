@@ -210,11 +210,12 @@ class ConvPMF(nn.Module):
                 prob_dist = self.softmax_last_dim(feature_map)
                 # [n_factor, num_review]
                 entropy = -torch.sum(prob_dist * torch.log(prob_dist), dim=-1)
+                assert torch.all(torch.std(entropy, dim=-1, keepdim=True) != 0)
                 z_score = (
                     entropy - torch.mean(entropy, dim=-1, keepdim=True)
                 ) / torch.std(entropy, dim=-1, keepdim=True)
                 # [n_factor, num_review]
-                weights = self.softmax_last_dim(1 / z_score)
+                weights = self.softmax_last_dim(1 / self.sigmoid(z_score))
                 # [1, n_factor]
                 item_embed = torch.sum(max_values * weights, dim=-1).unsqueeze(0)
             else:
