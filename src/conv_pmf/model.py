@@ -25,7 +25,6 @@ class ConvPMF(nn.Module):
         )
         self.n_factor = n_factor
         self.tanh = nn.Tanh()
-        self.sigmoid = nn.Sigmoid()
         self.softmax_last_dim = nn.Softmax(dim=-1)
         self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True)
         self.rating_mean = rating_mean
@@ -47,9 +46,9 @@ class ConvPMF(nn.Module):
         if with_entropy:
             return self.forward_with_entropy(user_indices, docs)
         else:
-            return self.forward_without_entropy(user_indices, docs)
+            # return self.forward_without_entropy(user_indices, docs)
             # return self.forward_drop(user_indices, docs, quantile=0.5)
-            # return self.forward_weighted_sum(user_indices, docs)
+            return self.forward_weighted_sum(user_indices, docs)
 
     def forward_with_entropy(self, user_indices, docs):
         """
@@ -215,7 +214,7 @@ class ConvPMF(nn.Module):
                     entropy - torch.mean(entropy, dim=-1, keepdim=True)
                 ) / torch.std(entropy, dim=-1, keepdim=True)
                 # [n_factor, num_review]
-                weights = self.softmax_last_dim(1 / self.sigmoid(z_score))
+                weights = self.softmax_last_dim(1 / self.tanh(z_score))
                 # [1, n_factor]
                 item_embed = torch.sum(max_values * weights, dim=-1).unsqueeze(0)
             else:
