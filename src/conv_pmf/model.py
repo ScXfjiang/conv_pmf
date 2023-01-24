@@ -209,7 +209,6 @@ class ConvPMF(nn.Module):
                 prob_dist = self.softmax_last_dim(feature_map)
                 # [n_factor, num_review]
                 entropy = -torch.sum(prob_dist * torch.log(prob_dist), dim=-1)
-                assert torch.all(torch.std(entropy, dim=-1, keepdim=True) != 0)
                 z_score = (
                     entropy - torch.mean(entropy, dim=-1, keepdim=True)
                 ) / torch.std(entropy, dim=-1, keepdim=True)
