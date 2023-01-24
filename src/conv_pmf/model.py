@@ -210,14 +210,14 @@ class ConvPMF(nn.Module):
                 # [n_factor, num_review]
                 entropy = -torch.sum(prob_dist * torch.log(prob_dist), dim=-1)
                 # min-max normalization
-                # x_scaled = (x - x_min) / (x_max - x_min + epsilon) + alpha
-                # x_scaled is in [alpha, 1 + alpha]
-                # 1/x_scaled is in [1/(1+alpha), 1/alpha]
+                # x_scaled = (x - x_min) / (x_max - x_min + epsilon) + offset
+                # x_scaled is in [offset, 1 + offset]
+                # 1/x_scaled is in [1/(1+offset), 1/offset]
                 max = torch.max(entropy, dim=-1, keepdim=True).values
                 min = torch.min(entropy, dim=-1, keepdim=True).values
-                alpha = 1e-1
+                offset = 1e-1
                 epsilon = 1e-5
-                entropy_scaled = (entropy - min)/(max - min + epsilon) + alpha
+                entropy_scaled = (entropy - min)/(max - min + epsilon) + offset
                 # [n_factor, num_review]
                 weights = self.softmax_last_dim(1 / entropy_scaled)
                 # [1, n_factor]
