@@ -1,6 +1,6 @@
 import json
 import numpy as np
-import torchtext
+import nltk
 from scipy.sparse import lil_matrix
 
 from common.dictionary import DictionaryIf
@@ -20,8 +20,7 @@ def gen_sparse_token_cnt_mat(dataset_path, dictionary):
         token_cnt_mat = lil_matrix((num_doc, voc_size), dtype=np.int32)
         f.seek(0)
         for doc_idx, line in enumerate(f):
-            tokenizer = torchtext.data.get_tokenizer("basic_english")
-            tokens = tokenizer(str(json.loads(line)["reviewText"]))
+            tokens = nltk.word_tokenize(str(json.loads(line)["reviewText"]))
             for token in tokens:
                 token_idx = dictionary.word2idx(token)
                 token_cnt_mat[doc_idx, token_idx] += 1
