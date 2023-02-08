@@ -143,14 +143,21 @@ def main():
     parser.add_argument("--lr", type=float, default=1.0)
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
+    parser.add_argument("--log_dir", default="", type=str)
+    parser.add_argument("--log_dir_level_2", default="", type=str)
     args = parser.parse_args()
 
-    # initialize log dir: datetime + uuid
+    # initialize log_dir
     today = date.today()
     date_str = today.strftime("%b-%d-%Y")
     time_str = time.strftime("%H-%M-%S", time.localtime())
     datetime_str = date_str + "-" + time_str
-    log_dir = os.path.join("log", datetime_str + "-" + str(uuid.uuid4()))
+    log_dir = os.path.join(
+        "log",
+        args.log_dir,
+        args.log_dir_level_2,
+        datetime_str + "-" + str(uuid.uuid4()),
+    )
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
