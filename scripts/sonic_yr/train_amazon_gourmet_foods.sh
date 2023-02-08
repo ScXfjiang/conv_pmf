@@ -9,7 +9,7 @@
 # specify number of tasks/cores per node required
 #SBATCH --ntasks-per-node=35
 # specify the walltime e.g 96 hours
-#SBATCH -t 96:00:00
+#SBATCH -t 192:00:00
 # set to email at start,end and failed jobs
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sc.xfjiang@gmail.com
