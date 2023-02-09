@@ -62,7 +62,7 @@ class Trainer(object):
                     self.model.state_dict(),
                     os.path.join(checkpoint_dir, "checkpoint_{}.pt".format(epoch_idx)),
                 )
-        # check final checkpoint
+        # save final checkpoint
         torch.save(
             self.model.state_dict(),
             os.path.join(checkpoint_dir, "checkpoint_final.pt"),
