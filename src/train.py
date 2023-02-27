@@ -7,7 +7,6 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 import pickle as pkl
 import uuid
-import matplotlib.pyplot as plt
 
 from conv_pmf.model import ConvPMF
 from conv_pmf.dataset import Amazon
