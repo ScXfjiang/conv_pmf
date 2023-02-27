@@ -66,6 +66,7 @@ class Trainer(object):
             self.model.state_dict(),
             os.path.join(checkpoint_dir, "checkpoint_final.pt"),
         )
+        self.writer.close()
 
     def train_epoch(self, epoch_idx):
         self.model.train()
@@ -84,7 +85,9 @@ class Trainer(object):
                 )
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse + self.epsilon * entropy
-                self.writer.add_scalar("Entropy/train", entropy, global_step)
+                self.writer.add_scalar(
+                    "Entropy/train", entropy.detach().cpu().numpy(), global_step
+                )
             elif self.epsilon == 0.0:
                 estimate_ratings = self.model(user_indices, docs, with_entropy=False)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
@@ -98,7 +101,9 @@ class Trainer(object):
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
         self.writer.add_scalar(
-            "Loss/train", float(sum(batch_losses) / len(batch_losses)), epoch_idx
+            "Loss/train",
+            float(sum(batch_losses) / len(batch_losses).detach().cpu().numpy()),
+            epoch_idx,
         )
         self.writer.flush()
 
@@ -115,7 +120,9 @@ class Trainer(object):
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 batch_losses.append(mse)
         self.writer.add_scalar(
-            "Loss/eval", float(sum(batch_losses) / len(batch_losses)), epoch_idx
+            "Loss/eval",
+            float(sum(batch_losses) / len(batch_losses).detach().cpu().numpy()),
+            epoch_idx,
         )
         self.writer.flush()
 
