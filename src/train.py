@@ -4,6 +4,7 @@ import time
 from datetime import date
 
 import torch
+from torch.utils.tensorboard import SummaryWriter
 import pickle as pkl
 import uuid
 import matplotlib.pyplot as plt
@@ -18,7 +19,7 @@ from common.util import show_elapsed_time
 
 class Trainer(object):
     def __init__(
-        self, model, epsilon, train_loader, num_epoch, optimizer, val_loader, log_dir,
+        self, model, epsilon, train_loader, num_epoch, optimizer, val_loader, log_dir
     ):
         self.model = model
         self.epsilon = epsilon
@@ -27,8 +28,7 @@ class Trainer(object):
         self.optimizer = optimizer
         self.val_loader = val_loader
         self.log_dir = log_dir
-        self.train_epoch_losses = []
-        self.val_epoch_losses = []
+        self.writer = SummaryWriter(log_dir)
 
     def train_and_val(self):
         # initialize checkpoint directory
@@ -44,14 +44,14 @@ class Trainer(object):
         for epoch_idx in range(1, self.num_epoch + 1):
             # train epoch
             train_epoch_start = time.time()
-            self.train_epoch()
+            self.train_epoch(epoch_idx)
             train_epoch_end = time.time()
             show_elapsed_time(
                 train_epoch_start, train_epoch_end, "Train epoch {}".format(epoch_idx)
             )
             # eval epoch
             val_epoch_start = time.time()
-            self.val_epoch()
+            self.val_epoch(epoch_idx)
             val_epoch_end = time.time()
             show_elapsed_time(
                 val_epoch_start, val_epoch_end, "val epoch {}".format(epoch_idx)
@@ -68,24 +68,12 @@ class Trainer(object):
             os.path.join(checkpoint_dir, "checkpoint_final.pt"),
         )
 
-        # save train_loss and val_loss
-        with open(os.path.join(self.log_dir, "train_loss"), "wb") as f:
-            pkl.dump(self.train_epoch_losses, f)
-        with open(os.path.join(self.log_dir, "val_loss"), "wb") as f:
-            pkl.dump(self.val_epoch_losses, f)
-        plt.plot(self.train_epoch_losses, label="train", linewidth=1)
-        plt.plot(self.val_epoch_losses, label="val", linewidth=1)
-        plt.legend(loc="upper right")
-        plt.xlabel("num of epoch")
-        plt.ylabel("MSE")
-        plt.grid()
-        plt.savefig(os.path.join(self.log_dir, "mse_curve.pdf"))
-
-    def train_epoch(self):
+    def train_epoch(self, epoch_idx):
         self.model.train()
         self.model.cuda()
         batch_losses = []
-        for user_indices, docs, gt_ratings in self.train_loader:
+        for batch_idx, (user_indices, docs, gt_ratings) in enumerate(self.train_loader):
+            global_step = batch_idx + len(self.train_loader) * epoch_idx
             user_indices = user_indices.to(device="cuda")
             docs = [doc.to(device="cuda") for doc in docs]
             gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
@@ -97,6 +85,7 @@ class Trainer(object):
                 )
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse + self.epsilon * entropy
+                self.writer.add_scalar("Entropy/train", entropy, global_step)
             elif self.epsilon == 0.0:
                 estimate_ratings = self.model(user_indices, docs, with_entropy=False)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
@@ -109,9 +98,12 @@ class Trainer(object):
             # model update
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
-        self.train_epoch_losses.append(float(sum(batch_losses) / len(batch_losses)))
+        self.writer.add_scalar(
+            "Loss/train", float(sum(batch_losses) / len(batch_losses)), epoch_idx
+        )
+        self.writer.flush()
 
-    def val_epoch(self):
+    def val_epoch(self, epoch_idx):
         with torch.no_grad():
             self.model.eval()
             self.model.cuda()
@@ -123,7 +115,10 @@ class Trainer(object):
                 estimate_ratings = self.model(user_indices, docs, with_entropy=False)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 batch_losses.append(mse)
-            self.val_epoch_losses.append(float(sum(batch_losses) / len(batch_losses)))
+        self.writer.add_scalar(
+            "Loss/eval", float(sum(batch_losses) / len(batch_losses)), epoch_idx
+        )
+        self.writer.flush()
 
 
 def main():
