@@ -86,9 +86,7 @@ class Trainer(object):
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse + self.epsilon * entropy
                 self.writer.add_scalar(
-                    "Entropy/train",
-                    entropy.detach().cpu().numpy(),
-                    global_step.detach().cpu().numpy(),
+                    "Entropy/train", entropy.detach().cpu().numpy(), global_step,
                 )
             elif self.epsilon == 0.0:
                 estimate_ratings = self.model(user_indices, docs, with_entropy=False)
@@ -105,7 +103,7 @@ class Trainer(object):
         self.writer.add_scalar(
             "Loss/train",
             float(sum(batch_losses) / len(batch_losses).detach().cpu().numpy()),
-            epoch_idx.detach().cpu().numpy(),
+            epoch_idx,
         )
         self.writer.flush()
 
@@ -124,7 +122,7 @@ class Trainer(object):
         self.writer.add_scalar(
             "Loss/eval",
             float(sum(batch_losses) / len(batch_losses).detach().cpu().numpy()),
-            epoch_idx.detach().cpu().numpy(),
+            epoch_idx,
         )
         self.writer.flush()
 
