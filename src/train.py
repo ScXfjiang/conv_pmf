@@ -27,7 +27,7 @@ class Trainer(object):
         self.optimizer = optimizer
         self.val_loader = val_loader
         self.log_dir = log_dir
-        self.writer = SummaryWriter(log_dir)
+        self.writer = SummaryWriter(os.path.join(log_dir, "run"))
 
     def train_and_val(self):
         # initialize checkpoint directory
