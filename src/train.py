@@ -102,7 +102,7 @@ class Trainer(object):
             self.optimizer.step()
         self.writer.add_scalar(
             "Loss/train",
-            float(sum(batch_losses) / len(batch_losses).detach().cpu().numpy()),
+            float(sum(batch_losses).detach().cpu().numpy() / len(batch_losses)),
             epoch_idx,
         )
         self.writer.flush()
@@ -121,7 +121,7 @@ class Trainer(object):
                 batch_losses.append(mse)
         self.writer.add_scalar(
             "Loss/eval",
-            float(sum(batch_losses) / len(batch_losses).detach().cpu().numpy()),
+            float(sum(batch_losses).detach().cpu().numpy() / len(batch_losses)),
             epoch_idx,
         )
         self.writer.flush()
