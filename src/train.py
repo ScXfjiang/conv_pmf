@@ -71,7 +71,6 @@ class Trainer(object):
     def train_epoch(self, epoch_idx):
         self.model.train()
         self.model.cuda()
-        batch_losses = []
         for batch_idx, (user_indices, docs, gt_ratings) in enumerate(self.train_loader):
             global_step = batch_idx + len(self.train_loader) * (epoch_idx - 1)
             user_indices = user_indices.to(device="cuda")
@@ -85,31 +84,25 @@ class Trainer(object):
                 )
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse + self.epsilon * entropy
-                self.writer.add_scalar(
-                    "Entropy/train", entropy.detach().cpu().numpy(), global_step,
-                )
             elif self.epsilon == 0.0:
                 estimate_ratings, entropy = self.model(
                     user_indices, docs, with_entropy=True
                 )
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse
-                self.writer.add_scalar(
-                    "Entropy/train", entropy.detach().cpu().numpy(), global_step,
-                )
             else:
                 raise ValueError("epsilon must be greater than or equal to 0.0")
-            batch_losses.append(mse)
+            self.writer.add_scalar(
+                "Entropy/train", entropy.detach().cpu().numpy(), global_step,
+            )
+            self.writer.add_scalar(
+                "Loss/train", mse.detach().cpu().numpy(), global_step,
+            )
             # backward
             loss.backward()
             # model update
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
-        self.writer.add_scalar(
-            "Loss/train",
-            float(sum(batch_losses).detach().cpu().numpy() / len(batch_losses)),
-            epoch_idx,
-        )
         self.writer.flush()
 
     def val_epoch(self, epoch_idx):
