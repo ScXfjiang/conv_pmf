@@ -78,17 +78,13 @@ class Trainer(object):
             gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
             self.optimizer.zero_grad()
             # forward
+            estimate_ratings, entropy = self.model(
+                user_indices, docs, with_entropy=True
+            )
+            mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
             if self.epsilon > 0.0:
-                estimate_ratings, entropy = self.model(
-                    user_indices, docs, with_entropy=True
-                )
-                mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse + self.epsilon * entropy
             elif self.epsilon == 0.0:
-                estimate_ratings, entropy = self.model(
-                    user_indices, docs, with_entropy=True
-                )
-                mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse
             else:
                 raise ValueError("epsilon must be greater than or equal to 0.0")
