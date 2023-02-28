@@ -80,7 +80,7 @@ def main():
                 cur_activations = activations[factor][review_idx]
                 # calculate entropy
                 prob_dist = torch.nn.functional.softmax(cur_activations, dim=0)
-                entropy = -torch.sum(prob_dist * torch.log(prob_dist))
+                entropy = -torch.sum(prob_dist * torch.log2(prob_dist))
                 entropy_list.append(float(entropy.detach().cpu().numpy()))
                 # only condiser reviews with small entropy
                 if entropy <= args.entropy_threshold:
