@@ -31,9 +31,9 @@ for n_factor in 4 8 16 32 64 128; do
                     --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \
                     --shuffle=True \
                     --train_batch_size=256 \
-                    --num_epoch=60 \
+                    --num_epoch=25 \
                     --window_size=5 \
-                    --n_word=128 \
+                    --n_word=16 \
                     --n_factor=${n_factor} \
                     --epsilon=${epsilon} \
                     --lr=0.1 \
