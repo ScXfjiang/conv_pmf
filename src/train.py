@@ -88,17 +88,19 @@ class Trainer(object):
                 loss = mse
             else:
                 raise ValueError("epsilon must be greater than or equal to 0.0")
+            # backward
+            loss.backward()
+            # model update
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+            self.optimizer.step()
+
+            # log
             self.writer.add_scalar(
                 "Entropy/train", entropy.detach().cpu().numpy(), global_step,
             )
             self.writer.add_scalar(
                 "Loss/train", mse.detach().cpu().numpy(), global_step,
             )
-            # backward
-            loss.backward()
-            # model update
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
-            self.optimizer.step()
         self.writer.flush()
 
     def val_epoch(self, epoch_idx):
