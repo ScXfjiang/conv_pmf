@@ -73,7 +73,7 @@ class Trainer(object):
         self.model.cuda()
         batch_losses = []
         for batch_idx, (user_indices, docs, gt_ratings) in enumerate(self.train_loader):
-            global_step = batch_idx + len(self.train_loader) * epoch_idx
+            global_step = batch_idx + len(self.train_loader) * (epoch_idx - 1)
             user_indices = user_indices.to(device="cuda")
             docs = [doc.to(device="cuda") for doc in docs]
             gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
