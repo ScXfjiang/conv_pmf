@@ -76,7 +76,7 @@ class ConvPMF(nn.Module):
                 prob_dist = self.softmax_last_dim(
                     torch.reshape(feature_map, (-1, feature_map.shape[-1]))
                 )
-                entropy_sum += -torch.sum(prob_dist * torch.log(prob_dist))
+                entropy_sum += -torch.sum(prob_dist * torch.log2(prob_dist))
                 num_entropy += prob_dist.shape[0]
             else:
                 # deal with empty doc -> use self.bias as estimate rating
@@ -154,7 +154,7 @@ class ConvPMF(nn.Module):
                 # [n_factor, num_review, num_word]
                 prob_dist = self.softmax_last_dim(feature_map)
                 # [n_factor, num_review]
-                entropy = -torch.sum(prob_dist * torch.log(prob_dist), dim=-1)
+                entropy = -torch.sum(prob_dist * torch.log2(prob_dist), dim=-1)
                 # [n_factor, num_review * quantile]
                 num_review = math.ceil(num_review * quantile)
                 indices = torch.topk(
@@ -208,7 +208,7 @@ class ConvPMF(nn.Module):
                 # [n_factor, num_review, num_word]
                 prob_dist = self.softmax_last_dim(feature_map)
                 # [n_factor, num_review]
-                entropy = -torch.sum(prob_dist * torch.log(prob_dist), dim=-1)
+                entropy = -torch.sum(prob_dist * torch.log2(prob_dist), dim=-1)
                 # min-max normalization
                 # x_scaled = (x - x_min) / (x_max - x_min + epsilon) + offset
                 # x_scaled is in [offset, 1 + offset]
