@@ -89,9 +89,14 @@ class Trainer(object):
                     "Entropy/train", entropy.detach().cpu().numpy(), global_step,
                 )
             elif self.epsilon == 0.0:
-                estimate_ratings = self.model(user_indices, docs, with_entropy=False)
+                estimate_ratings, entropy = self.model(
+                    user_indices, docs, with_entropy=True
+                )
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 loss = mse
+                self.writer.add_scalar(
+                    "Entropy/train", entropy.detach().cpu().numpy(), global_step,
+                )
             else:
                 raise ValueError("epsilon must be greater than or equal to 0.0")
             batch_losses.append(mse)
