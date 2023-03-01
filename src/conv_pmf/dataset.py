@@ -64,6 +64,7 @@ class Amazon(DatasetIf):
         self.train_df = self.get_dataframe(os.path.join(path, "train.json"))
         self.val_df = self.get_dataframe(os.path.join(path, "val.json"))
         self.test_df = self.get_dataframe(os.path.join(path, "test.json"))
+
         self.item_id2doc = {}
         for item_id in self.item_id2item_idx.keys():
             df = self.train_df[self.train_df["item_id"] == item_id]
@@ -72,6 +73,18 @@ class Amazon(DatasetIf):
             else:
                 doc = np.empty((0, self.n_token), dtype=np.int64)
             self.item_id2doc[item_id] = doc
+
+        # EXPERIMENT
+        # To check how different number of text reviews affect the model performance.
+        # We only use records of test_df that the number of reviews of the corresponding
+        # item is in the specific range [LOWER, HIGHER)
+        LOWER = 0
+        HIGHER = 10
+        to_keep = []
+        for item_id, doc in self.item_id2doc.items():
+            if len(doc) >= LOWER and len(doc) < HIGHER:
+                to_keep.append(item_id)
+        self.test_df = self.test_df[self.test_df["item_id"].isin(to_keep)]
 
     def __getitem__(self, idx):
         if self.mode == "train":
