@@ -95,7 +95,6 @@ class Trainer(object):
             # model update
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
-
             # log avg entropy of each batch
             self.writer.add_scalar(
                 "Entropy/train", entropy.detach().cpu().numpy(), global_step,
