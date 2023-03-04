@@ -41,31 +41,27 @@ class Trainer(object):
         )
         # train and eval loop
         for epoch_idx in range(1, self.num_epoch + 1):
-            # train epoch
+            # 1. train epoch
             train_epoch_start = time.time()
             self.train_epoch(epoch_idx)
             train_epoch_end = time.time()
             show_elapsed_time(
                 train_epoch_start, train_epoch_end, "Train epoch {}".format(epoch_idx)
             )
-            # eval epoch
+            # 2. eval epoch
             val_epoch_start = time.time()
             self.val_epoch(epoch_idx)
             val_epoch_end = time.time()
             show_elapsed_time(
                 val_epoch_start, val_epoch_end, "val epoch {}".format(epoch_idx)
             )
-            # save checkpoint periodically
-            if epoch_idx % 10 == 0:
-                torch.save(
-                    self.model.state_dict(),
-                    os.path.join(checkpoint_dir, "checkpoint_{}.pt".format(epoch_idx)),
-                )
-        # save final checkpoint
-        torch.save(
-            self.model.state_dict(),
-            os.path.join(checkpoint_dir, "checkpoint_final.pt"),
-        )
+            # save checkpoint for each epoch
+            torch.save(
+                self.model.state_dict(),
+                os.path.join(checkpoint_dir, "checkpoint_{}.pt".format(epoch_idx)),
+            )
+            # 3. calculate topic quality after training each epoch
+            # TODO
         self.writer.close()
 
     def train_epoch(self, epoch_idx):
