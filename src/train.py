@@ -96,10 +96,11 @@ class Trainer(object):
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
 
-            # log
+            # log avg entropy of each batch
             self.writer.add_scalar(
                 "Entropy/train", entropy.detach().cpu().numpy(), global_step,
             )
+        # log avg loss of each epoch
         self.writer.add_scalar(
             "Loss/train",
             float(sum(batch_losses).detach().cpu().numpy() / len(batch_losses)),
@@ -119,6 +120,7 @@ class Trainer(object):
                 estimate_ratings = self.model(user_indices, docs, with_entropy=False)
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 batch_losses.append(mse)
+        # log avg loss of each epoch
         self.writer.add_scalar(
             "Loss/eval",
             float(sum(batch_losses).detach().cpu().numpy() / len(batch_losses)),
