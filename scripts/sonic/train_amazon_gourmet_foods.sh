@@ -19,8 +19,8 @@ cd $SLURM_SUBMIT_DIR
 
 DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
-for n_factor in 4 8 16 32 64 128; do
-    for epsilon in 10 0.8 0.6 0.4 0.2 0.08 0.06 0.04 0.02; do
+for n_factor in 8; do
+    for epsilon in 0.0; do
         for idx in 1; do
             for cuda_device_idx in 0 1; do
                 export CUDA_VISIBLE_DEVICES=${cuda_device_idx}
