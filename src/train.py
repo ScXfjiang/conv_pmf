@@ -81,124 +81,16 @@ class Trainer(object):
                 )
             # 3. calculate topic quality after training each epoch
             npmi_epoch_start = time.time()
-            # 3.1 initialize trained embeddings and ew_model weights
-            trained_embeds = self.conv_pmf_model.state_dict()["embedding.weight"]
-            conv_weight = self.conv_pmf_model.state_dict()["conv1d.weight"]
-            self.ew_model.load_embeds(trained_embeds)
-            self.ew_model.load_weight(conv_weight)
-
-            # 3.2 get activation statistics
-            # factor -> token -> (act_sum, act_cnt)
-            factor2token2act_stat = {}
-            for text_reviews in self.ew_loader:
-                text_reviews = text_reviews.to(device="cuda")
-                # [n_factor, batch_size, n_words]
-                activations = self.ew_model(text_reviews)
-                # for each factor
-                for factor in range(self.ew_args["n_factor"]):
-                    token2act_stat = {}
-                    # for each review
-                    for review_idx in range(self.ew_args["ew_batch_size"]):
-                        # [n_words,]
-                        review_acts = activations[factor][review_idx]
-                        # calculate entropy
-                        prob_dist = torch.nn.functional.softmax(review_acts, dim=0)
-                        entropy = -torch.sum(prob_dist * torch.log2(prob_dist))
-                        # only condiser text reviews with small entropy
-                        if entropy <= self.ew_args["ew_entropy_threshold"]:
-                            # [n_words,]
-                            review_acts = review_acts.detach().cpu().numpy()
-                            # [n_words,]
-                            review_tokens = (
-                                text_reviews[review_idx].detach().cpu().numpy()
-                            )
-                            assert review_acts.shape == review_tokens.shape
-                            # note that act_idx == token_idx
-                            for act_idx in range(review_tokens.shape[0]):
-                                act_val = review_acts[act_idx]
-                                act_tokens = []
-                                act_tokens.append(review_tokens[act_idx])
-                                for offset in range(
-                                    1, (self.ew_args["window_size"] - 1) // 2 + 1
-                                ):
-                                    if act_idx - offset >= 0:
-                                        act_tokens.append(
-                                            review_tokens[act_idx - offset]
-                                        )
-                                    if act_idx + offset < review_tokens.shape[0]:
-                                        act_tokens.append(
-                                            review_tokens[act_idx + offset]
-                                        )
-                                for token in act_tokens:
-                                    if token in token2act_stat:
-                                        token2act_stat[token][0] += act_val
-                                        token2act_stat[token][1] += 1
-                                    else:
-                                        token2act_stat[token] = [act_val, 1]
-                    factor2token2act_stat[factor] = token2act_stat
-
-            # 3.3 extract words ordered by average activation value
-            factor2sorted_tokens = {}
-            factor2sorted_words = {}
-            # for each factor
-            for factor, token2act_stat in factor2token2act_stat.items():
-                tokens = []
-                avg_act_values = []
-                for token, (act_sum, act_cnt) in token2act_stat.items():
-                    if act_cnt < self.ew_args["ew_least_act_num"]:
-                        continue
-                    tokens.append(token)
-                    avg_act_values.append(float(float(act_sum) / act_cnt))
-                tokens = torch.tensor(tokens, dtype=torch.int32).to(device="cuda")
-                avg_act_values = torch.tensor(avg_act_values, dtype=torch.float32).to(
-                    device="cuda"
-                )
-                indices = (
-                    torch.topk(avg_act_values, self.ew_args["ew_k"]).indices
-                    if self.ew_args["ew_k"] <= avg_act_values.shape[0]
-                    else torch.argsort(avg_act_values)
-                )
-                sorted_tokens = list(tokens[indices].detach().cpu().numpy())
-                factor2sorted_tokens[factor] = sorted_tokens
-                sorted_words = [
-                    self.ew_args["dictionary"].idx2word(token)
-                    for token in sorted_tokens
-                ]
-                factor2sorted_words[factor] = sorted_words
-            # save factor2sorted_words to text file
-            extracted_words_dir = os.path.join(self.log_dir, "extracted_words")
-            if not os.path.exists(extracted_words_dir):
-                os.makedirs(extracted_words_dir)
-            with open(
-                os.path.join(
-                    extracted_words_dir, "factor2sorted_words_{}.txt".format(epoch_idx),
-                ),
-                "w",
-            ) as f:
-                for factor, sorted_words in factor2sorted_words.items():
-                    f.write("factor {}: {}\n".format(factor, sorted_words))
-
-            # 3.4 calculate NPMI to evaluate topic quality
-            token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
-            npmi_util = NPMIUtil(token_cnt_mat)
-            npmis = npmi_util.compute_npmi(factor2sorted_tokens)
-            avg_npmi = np.mean(npmis)
-            # log avg NPMI of each epoch
-            self.writer.add_scalar("NPMI/avg", avg_npmi, epoch_idx)
-            # write NPMI info to text file
-            npmi_info_dir = os.path.join(self.log_dir, "npmi_info")
-            if not os.path.exists(npmi_info_dir):
-                os.makedirs(npmi_info_dir)
-            with open(
-                os.path.join(npmi_info_dir, "npmi_info_{}.txt".format(epoch_idx)), "w",
-            ) as f:
-                f.write("avg npmi: {}\n".format(avg_npmi))
-                for factor, npmi in enumerate(list(npmis)):
-                    f.write("factor {}: {}\n".format(factor, npmi))
+            self.npmi_epoch(epoch_idx)
             npmi_epoch_end = time.time()
             show_elapsed_time(
                 npmi_epoch_start, npmi_epoch_end, "npmi epoch {}".format(epoch_idx)
             )
+        # save final checkpoint
+        torch.save(
+            self.model.state_dict(),
+            os.path.join(checkpoint_dir, "checkpoint_final.pt"),
+        )
 
         self.writer.close()
 
@@ -261,6 +153,117 @@ class Trainer(object):
             float(sum(batch_losses).detach().cpu().numpy() / len(batch_losses)),
             epoch_idx,
         )
+        self.writer.flush()
+
+    def npmi_epoch(self, epoch_idx):
+        # 1 initialize trained embeddings and ew_model weights
+        trained_embeds = self.conv_pmf_model.state_dict()["embedding.weight"]
+        conv_weight = self.conv_pmf_model.state_dict()["conv1d.weight"]
+        self.ew_model.load_embeds(trained_embeds)
+        self.ew_model.load_weight(conv_weight)
+
+        # 2 get activation statistics
+        # factor -> token -> (act_sum, act_cnt)
+        factor2token2act_stat = {}
+        for text_reviews in self.ew_loader:
+            text_reviews = text_reviews.to(device="cuda")
+            # [n_factor, batch_size, n_words]
+            activations = self.ew_model(text_reviews)
+            # for each factor
+            for factor in range(self.ew_args["n_factor"]):
+                token2act_stat = {}
+                # for each review
+                for review_idx in range(self.ew_args["ew_batch_size"]):
+                    # [n_words,]
+                    review_acts = activations[factor][review_idx]
+                    # calculate entropy
+                    prob_dist = torch.nn.functional.softmax(review_acts, dim=0)
+                    entropy = -torch.sum(prob_dist * torch.log2(prob_dist))
+                    # only condiser text reviews with small entropy
+                    if entropy <= self.ew_args["ew_entropy_threshold"]:
+                        # [n_words,]
+                        review_acts = review_acts.detach().cpu().numpy()
+                        # [n_words,]
+                        review_tokens = text_reviews[review_idx].detach().cpu().numpy()
+                        assert review_acts.shape == review_tokens.shape
+                        # note that act_idx == token_idx
+                        for act_idx in range(review_tokens.shape[0]):
+                            act_val = review_acts[act_idx]
+                            act_tokens = []
+                            act_tokens.append(review_tokens[act_idx])
+                            for offset in range(
+                                1, (self.ew_args["window_size"] - 1) // 2 + 1
+                            ):
+                                if act_idx - offset >= 0:
+                                    act_tokens.append(review_tokens[act_idx - offset])
+                                if act_idx + offset < review_tokens.shape[0]:
+                                    act_tokens.append(review_tokens[act_idx + offset])
+                            for token in act_tokens:
+                                if token in token2act_stat:
+                                    token2act_stat[token][0] += act_val
+                                    token2act_stat[token][1] += 1
+                                else:
+                                    token2act_stat[token] = [act_val, 1]
+                factor2token2act_stat[factor] = token2act_stat
+
+        # 3 extract words ordered by average activation value
+        factor2sorted_tokens = {}
+        factor2sorted_words = {}
+        # for each factor
+        for factor, token2act_stat in factor2token2act_stat.items():
+            tokens = []
+            avg_act_values = []
+            for token, (act_sum, act_cnt) in token2act_stat.items():
+                if act_cnt < self.ew_args["ew_least_act_num"]:
+                    continue
+                tokens.append(token)
+                avg_act_values.append(float(float(act_sum) / act_cnt))
+            tokens = torch.tensor(tokens, dtype=torch.int32).to(device="cuda")
+            avg_act_values = torch.tensor(avg_act_values, dtype=torch.float32).to(
+                device="cuda"
+            )
+            indices = (
+                torch.topk(avg_act_values, self.ew_args["ew_k"]).indices
+                if self.ew_args["ew_k"] <= avg_act_values.shape[0]
+                else torch.argsort(avg_act_values)
+            )
+            sorted_tokens = list(tokens[indices].detach().cpu().numpy())
+            factor2sorted_tokens[factor] = sorted_tokens
+            sorted_words = [
+                self.ew_args["dictionary"].idx2word(token) for token in sorted_tokens
+            ]
+            factor2sorted_words[factor] = sorted_words
+        # save factor2sorted_words to text file
+        extracted_words_dir = os.path.join(self.log_dir, "extracted_words")
+        if not os.path.exists(extracted_words_dir):
+            os.makedirs(extracted_words_dir)
+        with open(
+            os.path.join(
+                extracted_words_dir, "factor2sorted_words_{}.txt".format(epoch_idx),
+            ),
+            "w",
+        ) as f:
+            for factor, sorted_words in factor2sorted_words.items():
+                f.write("factor {}: {}\n".format(factor, sorted_words))
+
+        # 4 calculate NPMI to evaluate topic quality
+        token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
+        npmi_util = NPMIUtil(token_cnt_mat)
+        npmis = npmi_util.compute_npmi(factor2sorted_tokens)
+        avg_npmi = np.mean(npmis)
+        # log avg NPMI of each epoch
+        self.writer.add_scalar("NPMI/avg", avg_npmi, epoch_idx)
+        # write NPMI info to text file
+        npmi_info_dir = os.path.join(self.log_dir, "npmi_info")
+        if not os.path.exists(npmi_info_dir):
+            os.makedirs(npmi_info_dir)
+        with open(
+            os.path.join(npmi_info_dir, "npmi_info_{}.txt".format(epoch_idx)), "w",
+        ) as f:
+            f.write("avg npmi: {}\n".format(avg_npmi))
+            for factor, npmi in enumerate(list(npmis)):
+                f.write("factor {}: {}\n".format(factor, npmi))
+
         self.writer.flush()
 
 
