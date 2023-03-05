@@ -204,6 +204,7 @@ class Trainer(object):
 
 def main():
     parser = argparse.ArgumentParser()
+    # train and eval args
     parser.add_argument("--dataset_path", default="", type=str)
     parser.add_argument("--word_embeds_path", default="", type=str)
     parser.add_argument("--global_user_id2global_user_idx", default="", type=str)
@@ -211,7 +212,6 @@ def main():
     parser.add_argument("--shuffle", default=True, type=bool)
     parser.add_argument("--train_batch_size", default=128, type=int)
     parser.add_argument("--val_batch_size", default=128, type=int)
-    parser.add_argument("--extract_words_batch_size", default=128, type=int)
     parser.add_argument("--num_epoch", default=20, type=int)
     parser.add_argument("--window_size", default=5, type=int)
     parser.add_argument("--n_word", default=128, type=int)
@@ -220,6 +220,10 @@ def main():
     parser.add_argument("--lr", type=float, default=1.0)
     parser.add_argument("--momentum", type=float, default=0.9)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
+    # extract words args
+    parser.add_argument("--ew_batch_size", default=128, type=int)
+    parser.add_argument("--ew_entropy_threshold", type=float, default=float("inf"))
+    # log args
     parser.add_argument("--log_dir", default="", type=str)
     parser.add_argument("--log_dir_level_2", default="", type=str)
     args = parser.parse_args()
@@ -254,7 +258,6 @@ def main():
         )
         f.write("train_batch_size: {}\n".format(args.train_batch_size))
         f.write("val_batch_size: {}\n".format(args.val_batch_size))
-        f.write("extract_words_batch_size: {}\n".format(args.extract_words_batch_size))
         f.write("num_epoch: {}\n".format(args.num_epoch))
         f.write("window_size: {}\n".format(args.window_size))
         f.write("n_word: {}\n".format(args.n_word))
@@ -264,6 +267,8 @@ def main():
         f.write("lr: {}\n".format(args.lr))
         f.write("momentum: {}\n".format(args.momentum))
         f.write("weight_decay: {}\n".format(args.weight_decay))
+        f.write("ew_batch_size: {}\n".format(args.ew_batch_size))
+        f.write("ew_entropy_threshold: {}\n".format(args.ew_entropy_threshold))
 
     dictionary = GloveDict6B(args.word_embeds_path)
     word_embeds = GloveEmbeds(args.word_embeds_path)
@@ -321,14 +326,14 @@ def main():
     ew_dataset = AmazonEW(args.dataset_path, dictionary, args.n_word)
     ew_loader = torch.utils.data.DataLoader(
         dataset=ew_dataset,
-        batch_size=args.extract_words_batch_size,
+        batch_size=args.ew_batch_size,
         shuffle=False,
         drop_last=True,
     )
     ew_args = {
         "n_factor": args.n_factor,
-        "entropy_threshold": args.entropy_threshold,
-        "ew_batch_size": args.extract_words_batch_size,
+        "entropy_threshold": args.ew_entropy_threshold,
+        "ew_batch_size": args.ew_batch_size,
         "window_size": args.window_size,
     }
     trainer = Trainer(
