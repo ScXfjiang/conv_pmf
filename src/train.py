@@ -102,7 +102,7 @@ class Trainer(object):
                         prob_dist = torch.nn.functional.softmax(review_acts, dim=0)
                         entropy = -torch.sum(prob_dist * torch.log2(prob_dist))
                         # only condiser text reviews with small entropy
-                        if entropy <= self.ew_args["entropy_threshold"]:
+                        if entropy <= self.ew_args["ew_entropy_threshold"]:
                             # [n_words,]
                             review_acts = review_acts.detach().cpu().numpy()
                             # [n_words,]
@@ -332,7 +332,7 @@ def main():
     )
     ew_args = {
         "n_factor": args.n_factor,
-        "entropy_threshold": args.ew_entropy_threshold,
+        "ew_entropy_threshold": args.ew_entropy_threshold,
         "ew_batch_size": args.ew_batch_size,
         "window_size": args.window_size,
     }
