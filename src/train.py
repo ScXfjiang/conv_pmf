@@ -117,7 +117,7 @@ class Trainer(object):
             self.optimizer.step()
             # log avg entropy of each batch
             self.writer.add_scalar(
-                "Entropy/train", entropy.detach().cpu().numpy(), global_step,
+                "STAT/entropy", entropy.detach().cpu().numpy(), global_step,
             )
         # log avg loss of each epoch
         self.writer.add_scalar(
@@ -246,7 +246,7 @@ class Trainer(object):
         npmis = npmi_util.compute_npmi(factor2sorted_tokens)
         avg_npmi = np.mean(npmis)
         # log avg NPMI of each epoch
-        self.writer.add_scalar("NPMI/avg", avg_npmi, epoch_idx)
+        self.writer.add_scalar("STAT/avg_npmi", avg_npmi, epoch_idx)
         # write NPMI info to text file
         npmi_info_dir = os.path.join(self.log_dir, "npmi_info")
         if not os.path.exists(npmi_info_dir):
