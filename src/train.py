@@ -81,6 +81,7 @@ class Trainer(object):
                 self.conv_pmf_model.state_dict(), cur_checkpoint_path,
             )
             # 3. calculate topic quality after training each epoch
+            npmi_epoch_start = time.time()
             # 3.1 initialize trained embeddings and ew_model weights
             stat_dict = torch.load(cur_checkpoint_path)
             trained_embeds = stat_dict["embedding.weight"]
@@ -196,6 +197,10 @@ class Trainer(object):
                 f.write("avg npmi: {}\n".format(avg_npmi))
                 for factor, npmi in enumerate(list(npmis)):
                     f.write("factor {}: {}\n".format(factor, npmi))
+            npmi_epoch_end = time.time()
+            show_elapsed_time(
+                npmi_epoch_start, npmi_epoch_end, "npmi epoch {}".format(epoch_idx)
+            )
 
         self.writer.close()
 
