@@ -1,5 +1,4 @@
 #!/bin/bash
-
 DATA_PATH="/data/xuefei/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
 python ../../src/train.py \
@@ -10,11 +9,17 @@ python ../../src/train.py \
     --shuffle=True \
     --train_batch_size=256 \
     --val_batch_size=256 \
-    --num_epoch=60 \
+    --num_epoch=35 \
     --window_size=5 \
-    --n_word=128 \
+    --n_word=16 \
     --n_factor=8 \
     --epsilon=0.0 \
     --lr=0.1 \
     --momentum=0.9 \
-    --weight_decay=0.0001
+    --weight_decay=0.0001 \
+    --ew_batch_size=1024 \
+    --ew_least_act_num=30 \
+    --ew_k=30 \
+    --ew_token_cnt_mat_path="${DATA_PATH}/token_cnt_mat.npz" \
+    --log_dir="n_factor_8" \
+    --log_dir_level_2="0.0"

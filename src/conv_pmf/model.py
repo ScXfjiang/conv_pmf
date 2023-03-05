@@ -36,7 +36,7 @@ class ConvPMF(nn.Module):
         nn.init.uniform_(self.conv1d.weight, a=-1.0, b=1.0)
         self.bias = torch.nn.Parameter(torch.tensor(self.rating_mean))
 
-    def forward(self, user_indices, docs, with_entropy=False):
+    def forward(self, user_indices, docs, with_entropy=True):
         """
         Args:
             user_indices: [batch_size,]
@@ -217,7 +217,7 @@ class ConvPMF(nn.Module):
                 min = torch.min(entropy, dim=-1, keepdim=True).values
                 offset = 1e-1
                 epsilon = 1e-5
-                entropy_scaled = (entropy - min)/(max - min + epsilon) + offset
+                entropy_scaled = (entropy - min) / (max - min + epsilon) + offset
                 # [n_factor, num_review]
                 weights = self.softmax_last_dim(1 / entropy_scaled)
                 # [1, n_factor]

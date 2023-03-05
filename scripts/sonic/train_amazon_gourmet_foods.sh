@@ -19,8 +19,8 @@ cd $SLURM_SUBMIT_DIR
 
 DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
-for n_factor in 4 8 16 32 64 128; do
-    for epsilon in 10 0.8 0.6 0.4 0.2 0.08 0.06 0.04 0.02; do
+for n_factor in 8; do
+    for epsilon in 0.0; do
         for idx in 1; do
             for cuda_device_idx in 0 1; do
                 export CUDA_VISIBLE_DEVICES=${cuda_device_idx}
@@ -31,14 +31,19 @@ for n_factor in 4 8 16 32 64 128; do
                     --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \
                     --shuffle=True \
                     --train_batch_size=256 \
-                    --num_epoch=60 \
+                    --val_batch_size=256 \
+                    --num_epoch=35 \
                     --window_size=5 \
-                    --n_word=128 \
+                    --n_word=16 \
                     --n_factor=${n_factor} \
                     --epsilon=${epsilon} \
                     --lr=0.1 \
                     --momentum=0.9 \
                     --weight_decay=0.0001 \
+                    --ew_batch_size=1024 \
+                    --ew_least_act_num=30 \
+                    --ew_k=30 \
+                    --ew_token_cnt_mat_path="${DATA_PATH}/token_cnt_mat.npz" \
                     --log_dir="n_factor_${n_factor}" \
                     --log_dir_level_2="${epsilon}" &
             done
