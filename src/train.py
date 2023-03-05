@@ -73,12 +73,6 @@ class Trainer(object):
             show_elapsed_time(
                 val_epoch_start, val_epoch_end, "val epoch {}".format(epoch_idx)
             )
-            # save checkpoint periodically
-            if epoch_idx % 10 == 0:
-                torch.save(
-                    self.conv_pmf_model.state_dict(),
-                    os.path.join(checkpoint_dir, "checkpoint_{}.pt".format(epoch_idx)),
-                )
             # 3. calculate topic quality after training each epoch
             npmi_epoch_start = time.time()
             self.npmi_epoch(epoch_idx)
