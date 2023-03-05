@@ -34,44 +34,45 @@ class NPMIUtil:
         self.token_cnt_mat = token_cnt_mat.tocsc()
         self.npmi_cache = {}
 
-    def compute_npmi(self, factor2sorted_topics, k=10):
+    def compute_npmi(self, factor2sorted_topics):
         """
         Args:
             factor2sorted_topics (dict): factor_id -> list of topics
-            k (int): calculate npmi only for the first top_k topics
         """
         # npmi for each factor [n_factor,]
         factor2npmi = {}
         for factor, sorted_topics in factor2sorted_topics.items():
-            if len(sorted_topics) > k:
-                sorted_topics = sorted_topics[:k]
-            # npmi for each (topic_i, topic_j) pair
-            pair_npmis = []
-            for i, topic_i in enumerate(sorted_topics):
-                for topic_j in sorted_topics[i + 1 :]:
-                    ij = frozenset([topic_i, topic_j])
-                    if ij in self.npmi_cache:
-                        npmi = self.npmi_cache[ij]
-                    else:
-                        col_i = self.token_cnt_mat[:, topic_i]
-                        col_j = self.token_cnt_mat[:, topic_j]
-                        # count of topic_i
-                        c_i = col_i.sum()
-                        # count of topic_j
-                        c_j = col_j.sum()
-                        # count of (topic_i, topic_j)
-                        c_ij = col_i.multiply(col_j).sum()
-                        if c_ij == 0:
-                            npmi = 0.0
+            # no extracted topics
+            if len(sorted_topics) == 0:
+                factor2npmi[factor] = 0.0
+            else:
+                # npmi for each (topic_i, topic_j) pair
+                pair_npmis = []
+                for i, topic_i in enumerate(sorted_topics):
+                    for topic_j in sorted_topics[i + 1 :]:
+                        ij = frozenset([topic_i, topic_j])
+                        if ij in self.npmi_cache:
+                            npmi = self.npmi_cache[ij]
                         else:
-                            num_doc = self.token_cnt_mat.shape[0]
-                            npmi = (
-                                np.log2(num_doc)
-                                + np.log2(c_ij)
-                                - np.log2(c_i)
-                                - np.log2(c_j)
-                            ) / (np.log2(num_doc) - np.log2(c_ij))
-                        self.npmi_cache[ij] = npmi
-                    pair_npmis.append(npmi)
-            factor2npmi[factor] = np.mean(pair_npmis)
+                            col_i = self.token_cnt_mat[:, topic_i]
+                            col_j = self.token_cnt_mat[:, topic_j]
+                            # count of topic_i
+                            c_i = col_i.sum()
+                            # count of topic_j
+                            c_j = col_j.sum()
+                            # count of (topic_i, topic_j)
+                            c_ij = col_i.multiply(col_j).sum()
+                            if c_ij == 0:
+                                npmi = 0.0
+                            else:
+                                num_doc = self.token_cnt_mat.shape[0]
+                                npmi = (
+                                    np.log2(num_doc)
+                                    + np.log2(c_ij)
+                                    - np.log2(c_i)
+                                    - np.log2(c_j)
+                                ) / (np.log2(num_doc) - np.log2(c_ij))
+                            self.npmi_cache[ij] = npmi
+                        pair_npmis.append(npmi)
+                factor2npmi[factor] = np.mean(pair_npmis)
         return factor2npmi
