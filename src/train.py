@@ -73,19 +73,17 @@ class Trainer(object):
             show_elapsed_time(
                 val_epoch_start, val_epoch_end, "val epoch {}".format(epoch_idx)
             )
-            # save checkpoint for each epoch
-            cur_checkpoint_path = os.path.join(
-                checkpoint_dir, "checkpoint_{}.pt".format(epoch_idx)
-            )
-            torch.save(
-                self.conv_pmf_model.state_dict(), cur_checkpoint_path,
-            )
+            # save checkpoint periodically
+            if epoch_idx % 10 == 0:
+                torch.save(
+                    self.conv_pmf_model.state_dict(),
+                    os.path.join(checkpoint_dir, "checkpoint_{}.pt".format(epoch_idx)),
+                )
             # 3. calculate topic quality after training each epoch
             npmi_epoch_start = time.time()
             # 3.1 initialize trained embeddings and ew_model weights
-            stat_dict = torch.load(cur_checkpoint_path)
-            trained_embeds = stat_dict["embedding.weight"]
-            conv_weight = stat_dict["conv1d.weight"]
+            trained_embeds = self.conv_pmf_model.state_dict()["embedding.weight"]
+            conv_weight = self.conv_pmf_model.state_dict()["conv1d.weight"]
             self.ew_model.load_embeds(trained_embeds)
             self.ew_model.load_weight(conv_weight)
 
