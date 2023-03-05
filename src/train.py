@@ -117,7 +117,7 @@ class Trainer(object):
             self.optimizer.step()
             # log avg entropy of each batch
             self.writer.add_scalar(
-                "STAT/entropy", entropy.detach().cpu().numpy(), global_step,
+                "Entropy/entropy", entropy.detach().cpu().numpy(), global_step,
             )
         # log avg loss of each epoch
         self.writer.add_scalar(
@@ -243,20 +243,16 @@ class Trainer(object):
         # 4 calculate NPMI to evaluate topic quality
         token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
         npmi_util = NPMIUtil(token_cnt_mat)
-        npmis = npmi_util.compute_npmi(factor2sorted_tokens)
-        avg_npmi = np.mean(npmis)
-        # log avg NPMI of each epoch
-        self.writer.add_scalar("STAT/avg_npmi", avg_npmi, epoch_idx)
-        # write NPMI info to text file
-        npmi_info_dir = os.path.join(self.log_dir, "npmi_info")
-        if not os.path.exists(npmi_info_dir):
-            os.makedirs(npmi_info_dir)
-        with open(
-            os.path.join(npmi_info_dir, "npmi_info_{}.txt".format(epoch_idx)), "w",
-        ) as f:
-            f.write("avg npmi: {}\n".format(avg_npmi))
-            for factor, npmi in enumerate(list(npmis)):
-                f.write("factor {}: {}\n".format(factor, npmi))
+        factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
+        # log avg NPMI
+        self.writer.add_scalar(
+            "NPMI/npmi_avg", np.mean(factor2npmi.values()), epoch_idx
+        )
+        # log NPMI for each factor
+        for factor, npmi in factor2npmi.items():
+            self.writer.add_scalar(
+                "NPMI/npmi_factor_{}".format(factor), npmi, epoch_idx
+            )
 
         self.writer.flush()
 
