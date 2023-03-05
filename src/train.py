@@ -183,6 +183,7 @@ class Trainer(object):
             npmi_util = NPMIUtil(token_cnt_mat)
             npmis = npmi_util.compute_npmi(factor2sorted_tokens)
             avg_npmi = np.mean(npmis)
+            # log avg NPMI of each epoch
             self.writer.add_scalar("NPMI/avg", avg_npmi, epoch_idx)
             # write NPMI info to text file
             with open(
