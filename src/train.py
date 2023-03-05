@@ -7,6 +7,8 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 import pickle as pkl
 import uuid
+import numpy as np
+import scipy.sparse
 
 from conv_pmf.model import ConvPMF
 from conv_pmf.dataset import Amazon
@@ -16,6 +18,7 @@ from extract_words.dataset import AmazonEW
 from common.dictionary import GloveDict6B
 from common.word_embeds import GloveEmbeds
 from common.util import show_elapsed_time
+from common.topic_util import NPMIUtil
 
 
 class Trainer(object):
@@ -133,10 +136,59 @@ class Trainer(object):
                                     else:
                                         token2act_stat[token] = [act_val, 1]
                     factor2token2act_stat[factor] = token2act_stat
-            # 3.3 extract words by average activation value
-            # TODO
+            # 3.3 extract words ordered by average activation value
+            factor2sorted_tokens = {}
+            factor2sorted_words = {}
+            # for each factor
+            for factor, token2act_stat in factor2token2act_stat.items():
+                tokens = []
+                avg_act_values = []
+                for token, (act_sum, act_cnt) in token2act_stat.items():
+                    if act_cnt < self.ew_args["least_act_num"]:
+                        continue
+                    tokens.append(token)
+                    avg_act_values.append(float(float(act_sum) / act_cnt))
+                tokens = torch.tensor(tokens, dtype=torch.int32).to(device="cuda")
+                avg_act_values = torch.tensor(avg_act_values, dtype=torch.float32).to(
+                    device="cuda"
+                )
+                indices = (
+                    torch.topk(avg_act_values, self.ew_args["ew_k"]).indices
+                    if self.ew_args["ew_k"] <= avg_act_values.shape[0]
+                    else torch.argsort(avg_act_values)
+                )
+                sorted_tokens = list(tokens[indices].detach().cpu().numpy())
+                factor2sorted_tokens[factor] = sorted_tokens
+                sorted_words = [
+                    self.ew_args["dictionary"].idx2word(token)
+                    for token in sorted_tokens
+                ]
+                factor2sorted_words[factor] = sorted_words
             # 3.4 calculate NPMI to evaluate topic quality
-            # TODO
+            token_cnt_mat = scipy.sparse.load_npz(args.token_cnt_mat_path)
+            npmi_util = NPMIUtil(token_cnt_mat)
+            npmis = npmi_util.compute_npmi(factor2sorted_tokens)
+            avg_npmi = np.mean(npmis)
+
+            with open(
+                os.path.join(
+                    self.log_dir,
+                    "epoch_{}".format(epoch_idx),
+                    "factor2sorted_words.txt",
+                ),
+                "w",
+            ) as f:
+                for factor, sorted_words in factor2sorted_words.items():
+                    f.write("factor {}: {}\n".format(factor, sorted_words))
+            with open(
+                os.path.join(
+                    self.log_dir, "epoch_{}".format(epoch_idx), "npmi_info.txt"
+                ),
+                "w",
+            ) as f:
+                f.write("avg npmi: {}\n".format(avg_npmi))
+                for factor, npmi in enumerate(list(npmis)):
+                    f.write("factor {}: {}\n".format(factor, npmi))
 
         self.writer.close()
 
@@ -223,6 +275,8 @@ def main():
     # extract words args
     parser.add_argument("--ew_batch_size", default=128, type=int)
     parser.add_argument("--ew_entropy_threshold", type=float, default=float("inf"))
+    parser.add_argument("--ew_k", default=10, type=int)
+    parser.add_argument("--least_act_num", default=50, type=int)
     # log args
     parser.add_argument("--log_dir", default="", type=str)
     parser.add_argument("--log_dir_level_2", default="", type=str)
@@ -269,6 +323,8 @@ def main():
         f.write("weight_decay: {}\n".format(args.weight_decay))
         f.write("ew_batch_size: {}\n".format(args.ew_batch_size))
         f.write("ew_entropy_threshold: {}\n".format(args.ew_entropy_threshold))
+        f.write("ew_k: {}\n".format(args.ew_k))
+        f.write("least_act_num: {}\n".format(args.least_act_num))
 
     dictionary = GloveDict6B(args.word_embeds_path)
     word_embeds = GloveEmbeds(args.word_embeds_path)
@@ -335,6 +391,9 @@ def main():
         "ew_entropy_threshold": args.ew_entropy_threshold,
         "ew_batch_size": args.ew_batch_size,
         "window_size": args.window_size,
+        "ew_k": args.ew_k,
+        "least_act_num": args.least_act_num,
+        "dictionary": dictionary,
     }
     trainer = Trainer(
         conv_pmf_model,
