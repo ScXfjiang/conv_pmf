@@ -64,7 +64,7 @@ class Trainer(object):
             self.train_epoch(epoch_idx)
             train_epoch_end = time.time()
             show_elapsed_time(
-                train_epoch_start, train_epoch_end, "Train epoch {}".format(epoch_idx)
+                train_epoch_start, train_epoch_end, "train epoch {}".format(epoch_idx)
             )
             # 2. eval epoch
             val_epoch_start = time.time()
@@ -117,7 +117,9 @@ class Trainer(object):
             self.optimizer.step()
             # log avg entropy of each batch
             self.writer.add_scalar(
-                "Entropy/entropy", entropy.detach().cpu().numpy(), global_step,
+                "Entropy/entropy",
+                entropy.detach().cpu().numpy(),
+                global_step,
             )
         # log avg loss of each epoch
         self.writer.add_scalar(
@@ -233,7 +235,8 @@ class Trainer(object):
             os.makedirs(extracted_words_dir)
         with open(
             os.path.join(
-                extracted_words_dir, "factor2sorted_words_{}.txt".format(epoch_idx),
+                extracted_words_dir,
+                "factor2sorted_words_{}.txt".format(epoch_idx),
             ),
             "w",
         ) as f:
@@ -246,7 +249,7 @@ class Trainer(object):
         factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
         # log avg NPMI
         self.writer.add_scalar(
-            "NPMI/npmi_avg", np.mean(factor2npmi.values()), epoch_idx
+            "NPMI/npmi_avg", np.mean(list(factor2npmi.values())), epoch_idx
         )
         # log NPMI for each factor
         for factor, npmi in factor2npmi.items():
