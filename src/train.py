@@ -268,7 +268,7 @@ def main():
         momentum=args.momentum,
         weight_decay=args.weight_decay,
     )
-    ew_model = ExtractWords(args.n_factor, args.window_size)
+    ew_model = ExtractWords(args.n_factor, args.window_size, word_embeds.embed_dim())
     ew_dataset = AmazonEW(args.dataset_path, dictionary, args.n_word)
     ew_loader = torch.utils.data.DataLoader(
         dataset=ew_dataset,

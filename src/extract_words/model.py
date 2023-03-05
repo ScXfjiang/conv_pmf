@@ -4,10 +4,10 @@ import numpy as np
 
 
 class ExtractWords(nn.Module):
-    def __init__(self, n_factor, window_size, embeds=None, conv_weight=None):
+    def __init__(self, n_factor, window_size, embed_dim, embeds=None, conv_weight=None):
         super(ExtractWords, self).__init__()
         self.conv1d = nn.Conv1d(
-            in_channels=embeds.shape[1],
+            in_channels=embed_dim,
             out_channels=n_factor,
             kernel_size=window_size,
             padding="same",
