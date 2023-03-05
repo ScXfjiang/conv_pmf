@@ -217,7 +217,7 @@ class ConvPMF(nn.Module):
                 min = torch.min(entropy, dim=-1, keepdim=True).values
                 offset = 1e-1
                 epsilon = 1e-5
-                entropy_scaled = (entropy - min)/(max - min + epsilon) + offset
+                entropy_scaled = (entropy - min) / (max - min + epsilon) + offset
                 # [n_factor, num_review]
                 weights = self.softmax_last_dim(1 / entropy_scaled)
                 # [1, n_factor]

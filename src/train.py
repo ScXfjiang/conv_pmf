@@ -80,8 +80,8 @@ class Trainer(object):
             stat_dict = torch.load(cur_checkpoint_path)
             trained_embeds = stat_dict["embedding.weight"]
             conv_weight = stat_dict["conv1d.weight"]
-            self.ew_model.init_embeds(trained_embeds)
-            self.ew_model.init_weight(conv_weight)
+            self.ew_model.load_embeds(trained_embeds)
+            self.ew_model.load_weight(conv_weight)
             # 3.2 get activation statistics
             # TODO
             # 3.3 extract words by average activation value
