@@ -277,6 +277,7 @@ def main():
     parser.add_argument("--ew_entropy_threshold", type=float, default=float("inf"))
     parser.add_argument("--ew_k", default=10, type=int)
     parser.add_argument("--least_act_num", default=50, type=int)
+    parser.add_argument("--ew_token_cnt_mat_path", default="", type=str)
     # log args
     parser.add_argument("--log_dir", default="", type=str)
     parser.add_argument("--log_dir_level_2", default="", type=str)
@@ -325,6 +326,7 @@ def main():
         f.write("ew_entropy_threshold: {}\n".format(args.ew_entropy_threshold))
         f.write("ew_k: {}\n".format(args.ew_k))
         f.write("least_act_num: {}\n".format(args.least_act_num))
+        f.write("ew_token_cnt_mat_path: {}\n".format(args.ew_token_cnt_mat_path))
 
     dictionary = GloveDict6B(args.word_embeds_path)
     word_embeds = GloveEmbeds(args.word_embeds_path)
@@ -394,6 +396,7 @@ def main():
         "ew_k": args.ew_k,
         "least_act_num": args.least_act_num,
         "dictionary": dictionary,
+        "ew_token_cnt_mat_path": args.ew_token_cnt_mat_path,
     }
     trainer = Trainer(
         conv_pmf_model,
