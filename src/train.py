@@ -169,6 +169,7 @@ class Trainer(object):
             npmi_util = NPMIUtil(token_cnt_mat)
             npmis = npmi_util.compute_npmi(factor2sorted_tokens)
             avg_npmi = np.mean(npmis)
+            self.writer.add_scalar("NPMI/avg", avg_npmi, epoch_idx)
 
             with open(
                 os.path.join(
