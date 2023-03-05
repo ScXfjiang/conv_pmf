@@ -146,7 +146,7 @@ class Trainer(object):
                 tokens = []
                 avg_act_values = []
                 for token, (act_sum, act_cnt) in token2act_stat.items():
-                    if act_cnt < self.ew_args["least_act_num"]:
+                    if act_cnt < self.ew_args["ew_least_act_num"]:
                         continue
                     tokens.append(token)
                     avg_act_values.append(float(float(act_sum) / act_cnt))
@@ -282,8 +282,8 @@ def main():
     # extract words args
     parser.add_argument("--ew_batch_size", default=128, type=int)
     parser.add_argument("--ew_entropy_threshold", type=float, default=float("inf"))
+    parser.add_argument("--ew_least_act_num", default=50, type=int)
     parser.add_argument("--ew_k", default=10, type=int)
-    parser.add_argument("--least_act_num", default=50, type=int)
     parser.add_argument("--ew_token_cnt_mat_path", default="", type=str)
     # log args
     parser.add_argument("--log_dir", default="", type=str)
@@ -331,8 +331,8 @@ def main():
         f.write("weight_decay: {}\n".format(args.weight_decay))
         f.write("ew_batch_size: {}\n".format(args.ew_batch_size))
         f.write("ew_entropy_threshold: {}\n".format(args.ew_entropy_threshold))
+        f.write("ew_least_act_num: {}\n".format(args.ew_least_act_num))
         f.write("ew_k: {}\n".format(args.ew_k))
-        f.write("least_act_num: {}\n".format(args.least_act_num))
         f.write("ew_token_cnt_mat_path: {}\n".format(args.ew_token_cnt_mat_path))
 
     dictionary = GloveDict6B(args.word_embeds_path)
@@ -396,13 +396,13 @@ def main():
         drop_last=True,
     )
     ew_args = {
-        "n_factor": args.n_factor,
-        "ew_entropy_threshold": args.ew_entropy_threshold,
-        "ew_batch_size": args.ew_batch_size,
-        "window_size": args.window_size,
-        "ew_k": args.ew_k,
-        "least_act_num": args.least_act_num,
         "dictionary": dictionary,
+        "n_factor": args.n_factor,
+        "window_size": args.window_size,
+        "ew_batch_size": args.ew_batch_size,
+        "ew_entropy_threshold": args.ew_entropy_threshold,
+        "ew_least_act_num": args.ew_least_act_num,
+        "ew_k": args.ew_k,
         "ew_token_cnt_mat_path": args.ew_token_cnt_mat_path,
     }
     trainer = Trainer(

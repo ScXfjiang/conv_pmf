@@ -32,7 +32,6 @@ for n_factor in 8; do
                     --shuffle=True \
                     --train_batch_size=256 \
                     --eval_batch_size=256 \
-                    --extract_words_batch_size=1024 \
                     --num_epoch=25 \
                     --window_size=5 \
                     --n_word=16 \
@@ -41,6 +40,10 @@ for n_factor in 8; do
                     --lr=0.1 \
                     --momentum=0.9 \
                     --weight_decay=0.0001 \
+                    --ew_batch_size=1024 \
+                    --ew_least_act_num=50 \
+                    --ew_k=10 \
+                    --token_cnt_mat="${DATA_PATH}/token_cnt_mat.npz" \
                     --log_dir="n_factor_${n_factor}" \
                     --log_dir_level_2="${epsilon}" &
             done
