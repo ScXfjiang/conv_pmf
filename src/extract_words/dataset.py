@@ -25,7 +25,7 @@ class DatasetIf(torch.utils.data.Dataset):
         raise NotImplementedError
 
 
-class AmazonEW(DatasetIf):
+class EWAmazon(DatasetIf):
     """
     http://jmcauley.ucsd.edu/data/amazon/links.html
     """

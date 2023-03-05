@@ -14,7 +14,7 @@ from conv_pmf.model import ConvPMF
 from conv_pmf.dataset import Amazon
 from conv_pmf.data_loader import collate_fn
 from extract_words.model import ExtractWords
-from extract_words.dataset import AmazonEW
+from extract_words.dataset import EWAmazon
 from common.dictionary import GloveDict6B
 from common.word_embeds import GloveEmbeds
 from common.util import show_elapsed_time
@@ -388,7 +388,7 @@ def main():
         weight_decay=args.weight_decay,
     )
     ew_model = ExtractWords(args.n_factor, args.window_size, word_embeds.embed_dim())
-    ew_dataset = AmazonEW(args.dataset_path, dictionary, args.n_word)
+    ew_dataset = EWAmazon(args.dataset_path, dictionary, args.n_word)
     ew_loader = torch.utils.data.DataLoader(
         dataset=ew_dataset,
         batch_size=args.ew_batch_size,
