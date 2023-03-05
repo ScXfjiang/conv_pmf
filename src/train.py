@@ -167,11 +167,12 @@ class Trainer(object):
                 ]
                 factor2sorted_words[factor] = sorted_words
             # save factor2sorted_words to text file
+            extracted_words_dir = os.path.join(self.log_dir, "extracted_words")
+            if not os.path.exists(extracted_words_dir):
+                os.makedirs(extracted_words_dir)
             with open(
                 os.path.join(
-                    self.log_dir,
-                    "epoch_{}".format(epoch_idx),
-                    "factor2sorted_words.txt",
+                    extracted_words_dir, "factor2sorted_words_{}.txt".format(epoch_idx),
                 ),
                 "w",
             ) as f:
@@ -186,11 +187,11 @@ class Trainer(object):
             # log avg NPMI of each epoch
             self.writer.add_scalar("NPMI/avg", avg_npmi, epoch_idx)
             # write NPMI info to text file
+            npmi_info_dir = os.path.join(self.log_dir, "npmi_info")
+            if not os.path.exists(npmi_info_dir):
+                os.makedirs(npmi_info_dir)
             with open(
-                os.path.join(
-                    self.log_dir, "epoch_{}".format(epoch_idx), "npmi_info.txt"
-                ),
-                "w",
+                os.path.join(npmi_info_dir, "npmi_info_{}.txt".format(epoch_idx)), "w",
             ) as f:
                 f.write("avg npmi: {}\n".format(avg_npmi))
                 for factor, npmi in enumerate(list(npmis)):
