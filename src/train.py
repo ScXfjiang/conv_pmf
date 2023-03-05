@@ -29,6 +29,7 @@ class Trainer(object):
         val_loader,
         ew_model,
         ew_loader,
+        ew_args,
         log_dir,
     ):
         self.conv_pmf_model = conv_pmf_model
@@ -40,6 +41,7 @@ class Trainer(object):
         self.log_dir = log_dir
         self.ew_model = ew_model
         self.ew_loader = ew_loader
+        self.ew_args = (ew_args,)
         self.writer = SummaryWriter(os.path.join(log_dir, "run"))
 
     def train_and_val(self):
@@ -83,7 +85,54 @@ class Trainer(object):
             self.ew_model.load_embeds(trained_embeds)
             self.ew_model.load_weight(conv_weight)
             # 3.2 get activation statistics
-            # TODO
+            # factor -> token -> (act_sum, act_cnt)
+            factor2token2act_stat = {}
+            for text_reviews in self.ew_loader:
+                text_reviews = text_reviews.to(device="cuda")
+                # [n_factor, batch_size, n_words]
+                activations = self.ew_model(text_reviews)
+                # for each factor
+                for factor in range(self.ew_args["n_factor"]):
+                    token2act_stat = {}
+                    # for each review
+                    for review_idx in range(self.ew_args["ew_batch_size"]):
+                        # [n_words,]
+                        review_acts = activations[factor][review_idx]
+                        # calculate entropy
+                        prob_dist = torch.nn.functional.softmax(review_acts, dim=0)
+                        entropy = -torch.sum(prob_dist * torch.log2(prob_dist))
+                        # only condiser text reviews with small entropy
+                        if entropy <= self.ew_args["entropy_threshold"]:
+                            # [n_words,]
+                            review_acts = review_acts.detach().cpu().numpy()
+                            # [n_words,]
+                            review_tokens = (
+                                text_reviews[review_idx].detach().cpu().numpy()
+                            )
+                            assert review_acts.shape == review_tokens.shape
+                            # note that act_idx == token_idx
+                            for act_idx in range(review_tokens.shape[0]):
+                                act_val = review_acts[act_idx]
+                                act_tokens = []
+                                act_tokens.append(review_tokens[act_idx])
+                                for offset in range(
+                                    1, (self.ew_args["window_size"] - 1) // 2 + 1
+                                ):
+                                    if act_idx - offset >= 0:
+                                        act_tokens.append(
+                                            review_tokens[act_idx - offset]
+                                        )
+                                    if act_idx + offset < review_tokens.shape[0]:
+                                        act_tokens.append(
+                                            review_tokens[act_idx + offset]
+                                        )
+                                for token in act_tokens:
+                                    if token in token2act_stat:
+                                        token2act_stat[token][0] += act_val
+                                        token2act_stat[token][1] += 1
+                                    else:
+                                        token2act_stat[token] = [act_val, 1]
+                    factor2token2act_stat[factor] = token2act_stat
             # 3.3 extract words by average activation value
             # TODO
             # 3.4 calculate NPMI to evaluate topic quality
@@ -276,6 +325,12 @@ def main():
         shuffle=False,
         drop_last=True,
     )
+    ew_args = {
+        "n_factor": args.n_factor,
+        "entropy_threshold": args.entropy_threshold,
+        "ew_batch_size": args.extract_words_batch_size,
+        "window_size": args.window_size,
+    }
     trainer = Trainer(
         conv_pmf_model,
         args.epsilon,
@@ -285,6 +340,7 @@ def main():
         val_loader,
         ew_model,
         ew_loader,
+        ew_args,
         log_dir,
     )
     trainer.train_and_val()
