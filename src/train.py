@@ -44,7 +44,7 @@ class Trainer(object):
         self.log_dir = log_dir
         self.ew_model = ew_model
         self.ew_loader = ew_loader
-        self.ew_args = (ew_args,)
+        self.ew_args = ew_args
         self.writer = SummaryWriter(os.path.join(log_dir, "run"))
 
     def train_and_val(self):
