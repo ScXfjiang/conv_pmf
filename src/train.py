@@ -11,6 +11,8 @@ import uuid
 from conv_pmf.model import ConvPMF
 from conv_pmf.dataset import Amazon
 from conv_pmf.data_loader import collate_fn
+from extract_words.model import ExtractWords
+from extract_words.dataset import AmazonEW
 from common.dictionary import GloveDict6B
 from common.word_embeds import GloveEmbeds
 from common.util import show_elapsed_time
@@ -18,15 +20,26 @@ from common.util import show_elapsed_time
 
 class Trainer(object):
     def __init__(
-        self, model, epsilon, train_loader, num_epoch, optimizer, val_loader, log_dir
+        self,
+        conv_pmf_model,
+        epsilon,
+        train_loader,
+        num_epoch,
+        optimizer,
+        val_loader,
+        ew_model,
+        ew_loader,
+        log_dir,
     ):
-        self.model = model
+        self.conv_pmf_model = conv_pmf_model
         self.epsilon = epsilon
         self.train_loader = train_loader
         self.num_epoch = num_epoch
         self.optimizer = optimizer
         self.val_loader = val_loader
         self.log_dir = log_dir
+        self.ew_model = ew_model
+        self.ew_loader = ew_loader
         self.writer = SummaryWriter(os.path.join(log_dir, "run"))
 
     def train_and_val(self):
@@ -36,7 +49,7 @@ class Trainer(object):
             os.makedirs(checkpoint_dir)
         # save initialized parameters
         torch.save(
-            self.model.state_dict(),
+            self.conv_pmf_model.state_dict(),
             os.path.join(checkpoint_dir, "initialized_checkpoint.pt"),
         )
         # train and eval loop
@@ -56,17 +69,31 @@ class Trainer(object):
                 val_epoch_start, val_epoch_end, "val epoch {}".format(epoch_idx)
             )
             # save checkpoint for each epoch
+            cur_checkpoint_path = os.path.join(
+                checkpoint_dir, "checkpoint_{}.pt".format(epoch_idx)
+            )
             torch.save(
-                self.model.state_dict(),
-                os.path.join(checkpoint_dir, "checkpoint_{}.pt".format(epoch_idx)),
+                self.conv_pmf_model.state_dict(), cur_checkpoint_path,
             )
             # 3. calculate topic quality after training each epoch
+            # 3.1 initialize trained embeddings and ew_model weights
+            stat_dict = torch.load(cur_checkpoint_path)
+            trained_embeds = stat_dict["embedding.weight"]
+            conv_weight = stat_dict["conv1d.weight"]
+            self.ew_model.init_embeds(trained_embeds)
+            self.ew_model.init_weight(conv_weight)
+            # 3.2 get activation statistics
             # TODO
+            # 3.3 extract words by average activation value
+            # TODO
+            # 3.4 calculate NPMI to evaluate topic quality
+            # TODO
+
         self.writer.close()
 
     def train_epoch(self, epoch_idx):
-        self.model.train()
-        self.model.cuda()
+        self.conv_pmf_model.train()
+        self.conv_pmf_model.cuda()
         batch_losses = []
         for batch_idx, (user_indices, docs, gt_ratings) in enumerate(self.train_loader):
             global_step = batch_idx + len(self.train_loader) * (epoch_idx - 1)
@@ -75,7 +102,7 @@ class Trainer(object):
             gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
             self.optimizer.zero_grad()
             # forward
-            estimate_ratings, entropy = self.model(
+            estimate_ratings, entropy = self.conv_pmf_model(
                 user_indices, docs, with_entropy=True
             )
             mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
@@ -89,7 +116,7 @@ class Trainer(object):
             # backward
             loss.backward()
             # model update
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+            torch.nn.utils.clip_grad_norm_(self.conv_pmf_model.parameters(), 1.0)
             self.optimizer.step()
             # log avg entropy of each batch
             self.writer.add_scalar(
@@ -105,14 +132,16 @@ class Trainer(object):
 
     def val_epoch(self, epoch_idx):
         with torch.no_grad():
-            self.model.eval()
-            self.model.cuda()
+            self.conv_pmf_model.eval()
+            self.conv_pmf_model.cuda()
             batch_losses = []
             for user_indices, docs, gt_ratings in self.val_loader:
                 user_indices = user_indices.to(device="cuda")
                 docs = [doc.to(device="cuda") for doc in docs]
                 gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
-                estimate_ratings = self.model(user_indices, docs, with_entropy=False)
+                estimate_ratings = self.conv_pmf_model(
+                    user_indices, docs, with_entropy=False
+                )
                 mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
                 batch_losses.append(mse)
         # log avg loss of each epoch
@@ -133,6 +162,7 @@ def main():
     parser.add_argument("--shuffle", default=True, type=bool)
     parser.add_argument("--train_batch_size", default=128, type=int)
     parser.add_argument("--val_batch_size", default=128, type=int)
+    parser.add_argument("--extract_words_batch_size", default=128, type=int)
     parser.add_argument("--num_epoch", default=20, type=int)
     parser.add_argument("--window_size", default=5, type=int)
     parser.add_argument("--n_word", default=128, type=int)
@@ -175,6 +205,7 @@ def main():
         )
         f.write("train_batch_size: {}\n".format(args.train_batch_size))
         f.write("val_batch_size: {}\n".format(args.val_batch_size))
+        f.write("extract_words_batch_size: {}\n".format(args.extract_words_batch_size))
         f.write("num_epoch: {}\n".format(args.num_epoch))
         f.write("window_size: {}\n".format(args.window_size))
         f.write("n_word: {}\n".format(args.n_word))
@@ -223,7 +254,7 @@ def main():
         collate_fn=collate_fn,
         drop_last=True,
     )
-    model = ConvPMF(
+    conv_pmf_model = ConvPMF(
         global_num_user,
         args.n_factor,
         word_embeds,
@@ -232,18 +263,28 @@ def main():
         train_set.rating_std(),
     )
     optimizer = torch.optim.SGD(
-        model.parameters(),
+        conv_pmf_model.parameters(),
         lr=args.lr,
         momentum=args.momentum,
         weight_decay=args.weight_decay,
     )
+    ew_model = ExtractWords(args.n_factor, args.window_size)
+    ew_dataset = AmazonEW(args.dataset_path, dictionary, args.n_word)
+    ew_loader = torch.utils.data.DataLoader(
+        dataset=ew_dataset,
+        batch_size=args.extract_words_batch_size,
+        shuffle=False,
+        drop_last=True,
+    )
     trainer = Trainer(
-        model,
+        conv_pmf_model,
         args.epsilon,
         train_loader,
         args.num_epoch,
         optimizer,
         val_loader,
+        ew_model,
+        ew_loader,
         log_dir,
     )
     trainer.train_and_val()

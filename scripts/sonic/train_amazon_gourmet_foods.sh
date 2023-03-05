@@ -31,6 +31,8 @@ for n_factor in 8; do
                     --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \
                     --shuffle=True \
                     --train_batch_size=256 \
+                    --eval_batch_size=256 \
+                    --extract_words_batch_size=1024 \
                     --num_epoch=25 \
                     --window_size=5 \
                     --n_word=16 \
