@@ -165,7 +165,7 @@ class Trainer(object):
                 ]
                 factor2sorted_words[factor] = sorted_words
             # 3.4 calculate NPMI to evaluate topic quality
-            token_cnt_mat = scipy.sparse.load_npz(args.token_cnt_mat_path)
+            token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
             npmi_util = NPMIUtil(token_cnt_mat)
             npmis = npmi_util.compute_npmi(factor2sorted_tokens)
             avg_npmi = np.mean(npmis)
