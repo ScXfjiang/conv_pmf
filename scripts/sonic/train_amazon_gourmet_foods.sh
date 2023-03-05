@@ -32,7 +32,7 @@ for n_factor in 8; do
                     --shuffle=True \
                     --train_batch_size=256 \
                     --val_batch_size=256 \
-                    --num_epoch=50 \
+                    --num_epoch=35 \
                     --window_size=5 \
                     --n_word=16 \
                     --n_factor=${n_factor} \
