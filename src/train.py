@@ -87,6 +87,7 @@ class Trainer(object):
             conv_weight = stat_dict["conv1d.weight"]
             self.ew_model.load_embeds(trained_embeds)
             self.ew_model.load_weight(conv_weight)
+
             # 3.2 get activation statistics
             # factor -> token -> (act_sum, act_cnt)
             factor2token2act_stat = {}
@@ -136,6 +137,7 @@ class Trainer(object):
                                     else:
                                         token2act_stat[token] = [act_val, 1]
                     factor2token2act_stat[factor] = token2act_stat
+
             # 3.3 extract words ordered by average activation value
             factor2sorted_tokens = {}
             factor2sorted_words = {}
@@ -164,13 +166,7 @@ class Trainer(object):
                     for token in sorted_tokens
                 ]
                 factor2sorted_words[factor] = sorted_words
-            # 3.4 calculate NPMI to evaluate topic quality
-            token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
-            npmi_util = NPMIUtil(token_cnt_mat)
-            npmis = npmi_util.compute_npmi(factor2sorted_tokens)
-            avg_npmi = np.mean(npmis)
-            self.writer.add_scalar("NPMI/avg", avg_npmi, epoch_idx)
-
+            # save factor2sorted_words to text file
             with open(
                 os.path.join(
                     self.log_dir,
@@ -181,6 +177,14 @@ class Trainer(object):
             ) as f:
                 for factor, sorted_words in factor2sorted_words.items():
                     f.write("factor {}: {}\n".format(factor, sorted_words))
+
+            # 3.4 calculate NPMI to evaluate topic quality
+            token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
+            npmi_util = NPMIUtil(token_cnt_mat)
+            npmis = npmi_util.compute_npmi(factor2sorted_tokens)
+            avg_npmi = np.mean(npmis)
+            self.writer.add_scalar("NPMI/avg", avg_npmi, epoch_idx)
+            # write NPMI info to text file
             with open(
                 os.path.join(
                     self.log_dir, "epoch_{}".format(epoch_idx), "npmi_info.txt"
