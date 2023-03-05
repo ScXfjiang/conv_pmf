@@ -388,6 +388,8 @@ def main():
         weight_decay=args.weight_decay,
     )
     ew_model = ExtractWords(args.n_factor, args.window_size, word_embeds.embed_dim())
+    ew_model.eval()
+    ew_model.cuda()
     ew_dataset = EWAmazon(args.dataset_path, dictionary, args.n_word)
     ew_loader = torch.utils.data.DataLoader(
         dataset=ew_dataset,
