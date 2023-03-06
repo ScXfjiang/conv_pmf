@@ -42,7 +42,7 @@ for n_factor in 8; do
                     --weight_decay=0.0001 \
                     --ew_batch_size=1024 \
                     --ew_least_act_num=30 \
-                    --ew_k=30 \
+                    --ew_k=10 \
                     --ew_token_cnt_mat_path="${DATA_PATH}/token_cnt_mat.npz" \
                     --log_dir="n_factor_${n_factor}" \
                     --log_dir_level_2="${epsilon}" &
