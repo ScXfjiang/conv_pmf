@@ -84,7 +84,7 @@ class Trainer(object):
             )
         # save final checkpoint
         torch.save(
-            self.model.state_dict(),
+            self.conv_pmf_model.state_dict(),
             os.path.join(checkpoint_dir, "checkpoint_final.pt"),
         )
 
