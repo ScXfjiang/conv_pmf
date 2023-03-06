@@ -2,6 +2,7 @@ import argparse
 import os
 import time
 from datetime import date
+import string
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -9,6 +10,7 @@ import pickle as pkl
 import uuid
 import numpy as np
 import scipy.sparse
+from nltk.corpus import stopwords
 
 from conv_pmf.model import ConvPMF
 from conv_pmf.dataset import Amazon
@@ -245,17 +247,41 @@ class Trainer(object):
 
         # 4 calculate NPMI to evaluate topic quality
         token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
+
+        # version 1: not remove stopwords & punctuations
         npmi_util = NPMIUtil(token_cnt_mat)
+        # compute NPMI
         factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
         # log avg NPMI
         self.writer.add_scalar(
             "NPMI/npmi_avg", np.mean(list(factor2npmi.values())), epoch_idx
         )
-        # log NPMI for each factor
-        for factor, npmi in factor2npmi.items():
-            self.writer.add_scalar(
-                "NPMI/npmi_factor_{}".format(factor), npmi, epoch_idx
-            )
+
+        # version 2: remove stopwords & punctuations (clean)
+        npmi_util_clean = NPMIUtil(token_cnt_mat)
+        # remove stoptowds & punctuations from topics
+        factor2sorted_words_clean = {}
+        factor2sorted_tokens_clean = {}
+        to_remove = []
+        to_remove.extend(stopwords.words("english"))
+        to_remove.extend(list(string.punctuation))
+        for factor, sorted_words in factor2sorted_words:
+            sorted_words_clean = []
+            sorted_tokens_clean = []
+            for word in sorted_words:
+                if not word in to_remove:
+                    sorted_words_clean.append(word)
+                    sorted_tokens_clean.append(
+                        self.ew_args["dictionary"].word2idx(word)
+                    )
+            factor2sorted_words_clean[factor] = sorted_words_clean
+            factor2sorted_tokens_clean[factor] = sorted_tokens_clean
+        # compute NPMI (clean)
+        factor2npmi_clean = npmi_util_clean.compute_npmi(factor2sorted_tokens_clean)
+        # log avg NPMI (clean)
+        self.writer.add_scalar(
+            "NPMI/npmi_avg_clean", np.mean(list(factor2npmi_clean.values())), epoch_idx
+        )
 
         self.writer.flush()
 
