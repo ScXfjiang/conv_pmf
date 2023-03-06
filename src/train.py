@@ -119,9 +119,7 @@ class Trainer(object):
             self.optimizer.step()
             # log avg entropy of each batch
             self.writer.add_scalar(
-                "Entropy/entropy",
-                entropy.detach().cpu().numpy(),
-                global_step,
+                "Entropy/entropy", entropy.detach().cpu().numpy(), global_step,
             )
         # log avg loss of each epoch
         self.writer.add_scalar(
@@ -237,8 +235,7 @@ class Trainer(object):
             os.makedirs(extracted_words_dir)
         with open(
             os.path.join(
-                extracted_words_dir,
-                "factor2sorted_words_{}.txt".format(epoch_idx),
+                extracted_words_dir, "factor2sorted_words_{}.txt".format(epoch_idx),
             ),
             "w",
         ) as f:
@@ -265,7 +262,7 @@ class Trainer(object):
         to_remove = []
         to_remove.extend(stopwords.words("english"))
         to_remove.extend(list(string.punctuation))
-        for factor, sorted_words in factor2sorted_words:
+        for factor, sorted_words in factor2sorted_words.items():
             sorted_words_clean = []
             sorted_tokens_clean = []
             for word in sorted_words:
