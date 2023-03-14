@@ -102,7 +102,7 @@ class ConvPMF(nn.Module):
             item_embeds.append(item_embed)
         item_embeds = torch.cat(item_embeds, dim=0)
         estimate_ratings = torch.sum(user_embeds * item_embeds, dim=-1) + self.bias
-        total_avg_entropy = total_entropy_num / total_entropy_num
+        total_avg_entropy = total_entropy / total_entropy_num
         factor_avg_entropy = factor_entropy / factor_entropy_num
 
         return estimate_ratings, total_avg_entropy, factor_avg_entropy
