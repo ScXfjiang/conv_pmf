@@ -207,6 +207,7 @@ class Trainer(object):
         NUM_TOPIC = 50
         factor2sorted_tokens_50 = {}
         factor2sorted_words_50 = {}
+        words_dir = os.path.join(self.log_dir, "extracted_words")
         for factor, token2act_stat in factor2token2act_stat.items():
             tokens = []
             avg_act_values = []
@@ -230,7 +231,6 @@ class Trainer(object):
                 self.ew_args["dictionary"].idx2word(token) for token in sorted_tokens_50
             ]
             factor2sorted_words_50[factor] = sorted_words_50
-
         # [version 1]: keep stoptowds & punctuations from topics
         factor2sorted_tokens = {}
         factor2sorted_words = {}
@@ -240,6 +240,16 @@ class Trainer(object):
         for factor, sorted_words_50 in factor2sorted_words_50.items():
             sorted_words = sorted_words_50[: self.ew_args["ew_k"]]
             factor2sorted_words[factor] = sorted_words
+        # save extracted words to text file
+        original_dir = os.path.join(words_dir, "original")
+        if not os.path.exists(original_dir):
+            os.makedirs(original_dir)
+        with open(
+            os.path.join(original_dir, "factor2sorted_words_{}.txt".format(epoch_idx)),
+            "w",
+        ) as f:
+            for factor, sorted_words in factor2sorted_words.items():
+                f.write("factor {}: {}\n".format(factor, sorted_words))
         # [version 2] remove stoptowds & punctuations from topics
         factor2sorted_tokens_clean = {}
         factor2sorted_words_clean = {}
@@ -266,18 +276,6 @@ class Trainer(object):
                 else sorted_words_clean
             )
         # save extracted words to text file
-        words_dir = os.path.join(self.log_dir, "extracted_words")
-        # [version 1] keep stoptowds & punctuations from topics
-        original_dir = os.path.join(words_dir, "original")
-        if not os.path.exists(original_dir):
-            os.makedirs(original_dir)
-        with open(
-            os.path.join(original_dir, "factor2sorted_words_{}.txt".format(epoch_idx)),
-            "w",
-        ) as f:
-            for factor, sorted_words in factor2sorted_words.items():
-                f.write("factor {}: {}\n".format(factor, sorted_words))
-        # [version 2] remove stoptowds & punctuations from topics
         rm_stopwords_dir = os.path.join(words_dir, "rm_stopwords")
         if not os.path.exists(rm_stopwords_dir):
             os.makedirs(rm_stopwords_dir)
