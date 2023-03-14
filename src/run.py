@@ -11,6 +11,7 @@ import uuid
 import numpy as np
 import scipy.sparse
 from nltk.corpus import stopwords
+from sklearn.metrics.pairwise import cosine_similarity
 
 from conv_pmf.model import ConvPMF
 from conv_pmf.dataset import Amazon
@@ -269,7 +270,7 @@ class Trainer(object):
 
         # save extracted words to text file
         words_dir = os.path.join(self.log_dir, "extracted_words")
-        # [version 1]: keep stoptowds & punctuations from topics
+        # [version 1] keep stoptowds & punctuations from topics
         original_dir = os.path.join(words_dir, "original")
         if not os.path.exists(original_dir):
             os.makedirs(original_dir)
@@ -279,7 +280,7 @@ class Trainer(object):
         ) as f:
             for factor, sorted_words in factor2sorted_words.items():
                 f.write("factor {}: {}\n".format(factor, sorted_words))
-        # [version 2]: remove stoptowds & punctuations from topics
+        # [version 2] remove stoptowds & punctuations from topics
         rm_stopwords_dir = os.path.join(words_dir, "rm_stopwords")
         if not os.path.exists(rm_stopwords_dir):
             os.makedirs(rm_stopwords_dir)
@@ -295,19 +296,47 @@ class Trainer(object):
         # 4. NPMI (Normalized (Pointwise) Mutual Information)
         token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
         npmi_util = NPMIUtil(token_cnt_mat)
-        # version 1: keep stopwords & punctuations
+        # [version 1] keep stopwords & punctuations
         factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
         self.writer.add_scalar(
             "NPMI/npmi_avg", np.mean(list(factor2npmi.values())), epoch_idx
         )
-        # version 2: remove stopwords & punctuations (clean)
+        # [version 2] remove stopwords & punctuations (clean)
         factor2npmi_clean = npmi_util.compute_npmi(factor2sorted_tokens_clean)
         self.writer.add_scalar(
             "NPMI/npmi_avg_clean", np.mean(list(factor2npmi_clean.values())), epoch_idx
         )
 
         # 5. word2vec similarity
-        # TODO
+        trained_embeds_np = trained_embeds.detach().cpu().numpy()
+        # [version 1] keep stopwords & punctuations
+        cos_sims = []
+        for factor, sorted_tokens in factor2sorted_tokens.items():
+            k = len(sorted_tokens)
+            for i in range(k):
+                for j in range(i + 1, k):
+                    x = trained_embeds_np[sorted_tokens[i]]
+                    y = trained_embeds_np[sorted_tokens[j]]
+                    cos_sims.append(
+                        np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
+                    )
+        self.writer.add_scalar(
+            "word2vec_similarity/w2v_sim", np.mean(cos_sims), epoch_idx
+        )
+        # [version 2] remove stopwords & punctuations
+        cos_sims = []
+        for factor, sorted_tokens in factor2sorted_tokens_clean.items():
+            k = len(sorted_tokens)
+            for i in range(k):
+                for j in range(i + 1, k):
+                    x = trained_embeds_np[sorted_tokens[i]]
+                    y = trained_embeds_np[sorted_tokens[j]]
+                    cos_sims.append(
+                        np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
+                    )
+        self.writer.add_scalar(
+            "word2vec_similarity/w2v_sim_clean", np.mean(cos_sims), epoch_idx
+        )
 
         self.writer.flush()
 
