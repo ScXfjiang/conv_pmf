@@ -202,7 +202,8 @@ class Trainer(object):
                                     token2act_stat[token] = [act_val, 1]
                 factor2token2act_stat[factor] = token2act_stat
 
-        # 3. [version 1] extract words ordered by average activation value
+        # 3. extract words ordered by average activation value
+        # [version 1]: keep stoptowds & punctuations from topics
         factor2sorted_tokens = {}
         factor2sorted_words = {}
         # for each factor
@@ -242,7 +243,7 @@ class Trainer(object):
             for factor, sorted_words in factor2sorted_words.items():
                 f.write("factor {}: {}\n".format(factor, sorted_words))
 
-        # 4. [version 2] remove stoptowds & punctuations from topics
+        # [version 2] remove stoptowds & punctuations from topics
         factor2sorted_words_clean = {}
         factor2sorted_tokens_clean = {}
         to_remove = []
