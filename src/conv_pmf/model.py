@@ -79,14 +79,11 @@ class ConvPMF(nn.Module):
                     keepdim=True,
                 )
                 # calculate entropy statistics
-                # [num_review, n_factor, num_word]
-                prob_dist = self.softmax_last_dim(feature_map)
+                # [n_factor, num_review, num_word]
+                prob_dist = torch.permute(self.softmax_last_dim(feature_map), (1, 0, 2))
                 # [n_factor, num_review]
-                entropy = torch.permute(
-                    -torch.sum(
-                        prob_dist * torch.log2(prob_dist), dim=-1, keepdim=False
-                    ),
-                    (1, 0),
+                entropy = -torch.sum(
+                    prob_dist * torch.log2(prob_dist), dim=-1, keepdim=False
                 )
                 # 1. total entropy w.r.t. all factors
                 total_entropy += torch.sum(entropy)
