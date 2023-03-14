@@ -230,18 +230,6 @@ class Trainer(object):
                 self.ew_args["dictionary"].idx2word(token) for token in sorted_tokens
             ]
             factor2sorted_words[factor] = sorted_words
-        # save factor2sorted_words to text file
-        extracted_words_dir = os.path.join(self.log_dir, "extracted_words")
-        if not os.path.exists(extracted_words_dir):
-            os.makedirs(extracted_words_dir)
-        with open(
-            os.path.join(
-                extracted_words_dir, "factor2sorted_words_{}.txt".format(epoch_idx),
-            ),
-            "w",
-        ) as f:
-            for factor, sorted_words in factor2sorted_words.items():
-                f.write("factor {}: {}\n".format(factor, sorted_words))
 
         # [version 2] remove stoptowds & punctuations from topics
         factor2sorted_words_clean = {}
@@ -261,6 +249,31 @@ class Trainer(object):
                     )
             factor2sorted_words_clean[factor] = sorted_words_clean
             factor2sorted_tokens_clean[factor] = sorted_tokens_clean
+
+        # save extracted words to text file
+        words_dir = os.path.join(self.log_dir, "extracted_words")
+        # [version 1]: keep stoptowds & punctuations from topics
+        original_dir = os.path.join(words_dir, "original")
+        if not os.path.exists(original_dir):
+            os.makedirs(original_dir)
+        with open(
+            os.path.join(original_dir, "factor2sorted_words_{}.txt".format(epoch_idx)),
+            "w",
+        ) as f:
+            for factor, sorted_words in factor2sorted_words.items():
+                f.write("factor {}: {}\n".format(factor, sorted_words))
+        # [version 2]: remove stoptowds & punctuations from topics
+        rm_stopwords_dir = os.path.join(words_dir, "rm_stopwords")
+        if not os.path.exists(rm_stopwords_dir):
+            os.makedirs(rm_stopwords_dir)
+        with open(
+            os.path.join(
+                rm_stopwords_dir, "factor2sorted_words_{}.txt".format(epoch_idx)
+            ),
+            "w",
+        ) as f:
+            for factor, sorted_words_clean in factor2sorted_words_clean.items():
+                f.write("factor {}: {}\n".format(factor, sorted_words_clean))
 
         # 4. calculate NPMI to evaluate topic quality
         token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
