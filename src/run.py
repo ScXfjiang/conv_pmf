@@ -240,7 +240,6 @@ class Trainer(object):
         for factor, sorted_words_50 in factor2sorted_words_50.items():
             sorted_words = sorted_words_50[: self.ew_args["ew_k"]]
             factor2sorted_words[factor] = sorted_words
-
         # [version 2] remove stoptowds & punctuations from topics
         factor2sorted_tokens_clean = {}
         factor2sorted_words_clean = {}
@@ -266,7 +265,6 @@ class Trainer(object):
                 if len(sorted_words_clean) >= self.ew_args["ew_k"]
                 else sorted_words_clean
             )
-
         # save extracted words to text file
         words_dir = os.path.join(self.log_dir, "extracted_words")
         # [version 1] keep stoptowds & punctuations from topics
