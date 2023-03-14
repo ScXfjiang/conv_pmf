@@ -258,12 +258,12 @@ class Trainer(object):
                     )
             factor2sorted_tokens_clean[factor] = (
                 sorted_tokens_clean[: self.ew_args["ew_k"]]
-                if len(sorted_tokens_clean) <= self.ew_args["ew_k"]
+                if len(sorted_tokens_clean) >= self.ew_args["ew_k"]
                 else sorted_tokens_clean
             )
             factor2sorted_words_clean[factor] = (
                 sorted_words_clean[: self.ew_args["ew_k"]]
-                if len(sorted_words_clean) <= self.ew_args["ew_k"]
+                if len(sorted_words_clean) >= self.ew_args["ew_k"]
                 else sorted_words_clean
             )
 
