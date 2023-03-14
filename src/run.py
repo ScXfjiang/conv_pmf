@@ -124,7 +124,7 @@ class Trainer(object):
                 global_step,
             )
             # log entropy w.r.t. each factor of each batch
-            factor_entropy = list(factor_entropy.detach().cpu().numpy())
+            factor_entropy = factor_entropy.detach().cpu().numpy()
             for factor, entropy in enumerate(factor_entropy):
                 self.writer.add_scalar(
                     "Entropy/factor_{}_entropy".format(factor), entropy, global_step,
