@@ -77,7 +77,7 @@ class Trainer(object):
             )
             # 3. calculate topic quality after training each epoch
             npmi_epoch_start = time.time()
-            self.npmi_epoch(epoch_idx)
+            self.metric_epoch(epoch_idx)
             npmi_epoch_end = time.time()
             show_elapsed_time(
                 npmi_epoch_start, npmi_epoch_end, "npmi epoch {}".format(epoch_idx)
@@ -151,7 +151,7 @@ class Trainer(object):
         )
         self.writer.flush()
 
-    def npmi_epoch(self, epoch_idx):
+    def metric_epoch(self, epoch_idx):
         # 1. initialize trained embeddings and ew_model weights
         trained_embeds = self.conv_pmf_model.state_dict()["embedding.weight"]
         conv_weight = self.conv_pmf_model.state_dict()["conv1d.weight"]
