@@ -203,7 +203,7 @@ class Trainer(object):
                 factor2token2act_stat[factor] = token2act_stat
 
         # 3. extract words ordered by average activation value
-        # for each factor, we first calculate top 50 topics
+        # for each factor, we first extract top 50 words
         NUM_TOPIC = 50
         factor2sorted_tokens_50 = {}
         factor2sorted_words_50 = {}
