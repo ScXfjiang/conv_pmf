@@ -76,11 +76,11 @@ class Trainer(object):
                 val_epoch_start, val_epoch_end, "val epoch {}".format(epoch_idx)
             )
             # 3. calculate topic quality after training each epoch
-            npmi_epoch_start = time.time()
+            metric_epoch_start = time.time()
             self.metric_epoch(epoch_idx)
-            npmi_epoch_end = time.time()
+            metric_epoch_end = time.time()
             show_elapsed_time(
-                npmi_epoch_start, npmi_epoch_end, "npmi epoch {}".format(epoch_idx)
+                metric_epoch_start, metric_epoch_end, "npmi epoch {}".format(epoch_idx)
             )
         # save final checkpoint
         torch.save(
