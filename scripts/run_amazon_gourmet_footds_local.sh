@@ -1,7 +1,7 @@
 #!/bin/bash
 DATA_PATH="/data/xuefei/dataset/amazon/amazon_grocery_and_gourmet_foods"
 
-python ../../src/run.py \
+python ../src/run.py \
     --dataset_path="${DATA_PATH}" \
     --word_embeds_path="/data/xuefei/dataset/glove.6B/glove.6B.50d.txt" \
     --global_user_id2global_user_idx="${DATA_PATH}/global_user_id2global_user_idx.pkl" \

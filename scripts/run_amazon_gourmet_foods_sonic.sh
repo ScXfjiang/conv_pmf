@@ -24,7 +24,7 @@ for n_factor in 8; do
         for idx in 1; do
             for cuda_device_idx in 0 1; do
                 export CUDA_VISIBLE_DEVICES=${cuda_device_idx}
-                python ../../src/run.py \
+                python ../src/run.py \
                     --dataset_path="${DATA_PATH}" \
                     --word_embeds_path="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt" \
                     --global_user_id2global_user_idx="${DATA_PATH}/global_user_id2global_user_idx.pkl" \
