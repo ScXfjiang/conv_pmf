@@ -76,11 +76,11 @@ class Trainer(object):
                 val_epoch_start, val_epoch_end, "val epoch {}".format(epoch_idx)
             )
             # 3. calculate topic quality after training each epoch
-            npmi_epoch_start = time.time()
-            self.npmi_epoch(epoch_idx)
-            npmi_epoch_end = time.time()
+            metric_epoch_start = time.time()
+            self.metric_epoch(epoch_idx)
+            metric_epoch_end = time.time()
             show_elapsed_time(
-                npmi_epoch_start, npmi_epoch_end, "npmi epoch {}".format(epoch_idx)
+                metric_epoch_start, metric_epoch_end, "npmi epoch {}".format(epoch_idx)
             )
         # save final checkpoint
         torch.save(
@@ -151,14 +151,14 @@ class Trainer(object):
         )
         self.writer.flush()
 
-    def npmi_epoch(self, epoch_idx):
-        # 1 initialize trained embeddings and ew_model weights
+    def metric_epoch(self, epoch_idx):
+        # 1. initialize trained embeddings and ew_model weights
         trained_embeds = self.conv_pmf_model.state_dict()["embedding.weight"]
         conv_weight = self.conv_pmf_model.state_dict()["conv1d.weight"]
         self.ew_model.load_embeds(trained_embeds)
         self.ew_model.load_weight(conv_weight)
 
-        # 2 get activation statistics
+        # 2. get activation statistics
         # factor -> token -> (act_sum, act_cnt)
         factor2token2act_stat = {}
         for text_reviews in self.ew_loader:
@@ -202,10 +202,12 @@ class Trainer(object):
                                     token2act_stat[token] = [act_val, 1]
                 factor2token2act_stat[factor] = token2act_stat
 
-        # 3 extract words ordered by average activation value
-        factor2sorted_tokens = {}
-        factor2sorted_words = {}
-        # for each factor
+        # 3. extract words ordered by average activation value
+        # for each factor, we first extract top 50 words
+        NUM_TOPIC = 50
+        factor2sorted_tokens_50 = {}
+        factor2sorted_words_50 = {}
+        words_dir = os.path.join(self.log_dir, "extracted_words")
         for factor, token2act_stat in factor2token2act_stat.items():
             tokens = []
             avg_act_values = []
@@ -219,65 +221,116 @@ class Trainer(object):
                 device="cuda"
             )
             indices = (
-                torch.topk(avg_act_values, self.ew_args["ew_k"]).indices
-                if self.ew_args["ew_k"] <= avg_act_values.shape[0]
+                torch.topk(avg_act_values, NUM_TOPIC).indices
+                if NUM_TOPIC <= avg_act_values.shape[0]
                 else torch.argsort(avg_act_values)
             )
-            sorted_tokens = list(tokens[indices].detach().cpu().numpy())
-            factor2sorted_tokens[factor] = sorted_tokens
-            sorted_words = [
-                self.ew_args["dictionary"].idx2word(token) for token in sorted_tokens
+            sorted_tokens_50 = list(tokens[indices].detach().cpu().numpy())
+            factor2sorted_tokens_50[factor] = sorted_tokens_50
+            sorted_words_50 = [
+                self.ew_args["dictionary"].idx2word(token) for token in sorted_tokens_50
             ]
+            factor2sorted_words_50[factor] = sorted_words_50
+        # [version 1]: keep stoptowds & punctuations from topics
+        factor2sorted_tokens = {}
+        factor2sorted_words = {}
+        for factor, sorted_tokens_50 in factor2sorted_tokens_50.items():
+            sorted_tokens = sorted_tokens_50[: self.ew_args["ew_k"]]
+            factor2sorted_tokens[factor] = sorted_tokens
+        for factor, sorted_words_50 in factor2sorted_words_50.items():
+            sorted_words = sorted_words_50[: self.ew_args["ew_k"]]
             factor2sorted_words[factor] = sorted_words
-        # save factor2sorted_words to text file
-        extracted_words_dir = os.path.join(self.log_dir, "extracted_words")
-        if not os.path.exists(extracted_words_dir):
-            os.makedirs(extracted_words_dir)
+        # save extracted words to text file
+        original_dir = os.path.join(words_dir, "original")
+        if not os.path.exists(original_dir):
+            os.makedirs(original_dir)
         with open(
-            os.path.join(
-                extracted_words_dir, "factor2sorted_words_{}.txt".format(epoch_idx),
-            ),
+            os.path.join(original_dir, "factor2sorted_words_{}.txt".format(epoch_idx)),
             "w",
         ) as f:
             for factor, sorted_words in factor2sorted_words.items():
                 f.write("factor {}: {}\n".format(factor, sorted_words))
-
-        # 4 calculate NPMI to evaluate topic quality
-        token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
-
-        # version 1: not remove stopwords & punctuations
-        npmi_util = NPMIUtil(token_cnt_mat)
-        # compute NPMI
-        factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
-        # log avg NPMI
-        self.writer.add_scalar(
-            "NPMI/npmi_avg", np.mean(list(factor2npmi.values())), epoch_idx
-        )
-
-        # version 2: remove stopwords & punctuations (clean)
-        npmi_util_clean = NPMIUtil(token_cnt_mat)
-        # remove stoptowds & punctuations from topics
-        factor2sorted_words_clean = {}
+        # [version 2] remove stoptowds & punctuations from topics
         factor2sorted_tokens_clean = {}
+        factor2sorted_words_clean = {}
         to_remove = []
         to_remove.extend(stopwords.words("english"))
         to_remove.extend(list(string.punctuation))
-        for factor, sorted_words in factor2sorted_words.items():
+        for factor, sorted_words_50 in factor2sorted_words_50.items():
             sorted_words_clean = []
             sorted_tokens_clean = []
-            for word in sorted_words:
+            for word in sorted_words_50:
                 if not word in to_remove:
                     sorted_words_clean.append(word)
                     sorted_tokens_clean.append(
                         self.ew_args["dictionary"].word2idx(word)
                     )
-            factor2sorted_words_clean[factor] = sorted_words_clean
-            factor2sorted_tokens_clean[factor] = sorted_tokens_clean
-        # compute NPMI (clean)
-        factor2npmi_clean = npmi_util_clean.compute_npmi(factor2sorted_tokens_clean)
-        # log avg NPMI (clean)
+            factor2sorted_tokens_clean[factor] = (
+                sorted_tokens_clean[: self.ew_args["ew_k"]]
+                if len(sorted_tokens_clean) >= self.ew_args["ew_k"]
+                else sorted_tokens_clean
+            )
+            factor2sorted_words_clean[factor] = (
+                sorted_words_clean[: self.ew_args["ew_k"]]
+                if len(sorted_words_clean) >= self.ew_args["ew_k"]
+                else sorted_words_clean
+            )
+        # save extracted words to text file
+        rm_stopwords_dir = os.path.join(words_dir, "rm_stopwords")
+        if not os.path.exists(rm_stopwords_dir):
+            os.makedirs(rm_stopwords_dir)
+        with open(
+            os.path.join(
+                rm_stopwords_dir, "factor2sorted_words_{}.txt".format(epoch_idx)
+            ),
+            "w",
+        ) as f:
+            for factor, sorted_words_clean in factor2sorted_words_clean.items():
+                f.write("factor {}: {}\n".format(factor, sorted_words_clean))
+
+        # 4. NPMI (Normalized (Pointwise) Mutual Information)
+        token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
+        npmi_util = NPMIUtil(token_cnt_mat)
+        # [version 1] keep stopwords & punctuations
+        factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
+        self.writer.add_scalar(
+            "NPMI/npmi_avg", np.mean(list(factor2npmi.values())), epoch_idx
+        )
+        # [version 2] remove stopwords & punctuations (clean)
+        factor2npmi_clean = npmi_util.compute_npmi(factor2sorted_tokens_clean)
         self.writer.add_scalar(
             "NPMI/npmi_avg_clean", np.mean(list(factor2npmi_clean.values())), epoch_idx
+        )
+
+        # 5. word2vec similarity
+        trained_embeds_np = trained_embeds.detach().cpu().numpy()
+        # [version 1] keep stopwords & punctuations
+        cos_sims = []
+        for factor, sorted_tokens in factor2sorted_tokens.items():
+            k = len(sorted_tokens)
+            for i in range(k):
+                for j in range(i + 1, k):
+                    x = trained_embeds_np[sorted_tokens[i]]
+                    y = trained_embeds_np[sorted_tokens[j]]
+                    cos_sims.append(
+                        np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
+                    )
+        self.writer.add_scalar(
+            "word2vec_similarity/w2v_sim", np.mean(cos_sims), epoch_idx
+        )
+        # [version 2] remove stopwords & punctuations
+        cos_sims_clean = []
+        for factor, sorted_tokens_clean in factor2sorted_tokens_clean.items():
+            k = len(sorted_tokens_clean)
+            for i in range(k):
+                for j in range(i + 1, k):
+                    x = trained_embeds_np[sorted_tokens_clean[i]]
+                    y = trained_embeds_np[sorted_tokens_clean[j]]
+                    cos_sims_clean.append(
+                        np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
+                    )
+        self.writer.add_scalar(
+            "word2vec_similarity/w2v_sim_clean", np.mean(cos_sims_clean), epoch_idx
         )
 
         self.writer.flush()
