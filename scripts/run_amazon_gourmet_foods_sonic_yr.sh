@@ -1,13 +1,15 @@
 #!/bin/bash -l
-#SBATCH --job-name=wide&deep
+#SBATCH --job-name=maskrcnn
 # speficity number of nodes
 #SBATCH -N 1
 # specify the gpu queue
-#SBATCH --partition=GpuQ
+#SBATCH --partition=csgpu
+# Request 2 gpus
+#SBATCH --gres=gpu:2
 # specify number of tasks/cores per node required
 #SBATCH --ntasks-per-node=35
-# specify the walltime e.g 48 hours
-#SBATCH -t 48:00:00
+# specify the walltime e.g 96 hours
+#SBATCH -t 192:00:00
 # set to email at start,end and failed jobs
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sc.xfjiang@gmail.com
@@ -15,16 +17,14 @@
 # run from current directory
 cd $SLURM_SUBMIT_DIR
 
-module load cuda/11.3
-
-DATA_PATH="/ichec/work/ucd01/yongru/dataset/amazon/amazon_grocery_and_gourmet_foods"
+DATA_PATH="/scratch/22204923/datasets/amazon/amazon_grocery_and_gourmet_foods"
 
 for idx in 1; do
     for cuda_device_idx in 0 1; do
         export CUDA_VISIBLE_DEVICES=${cuda_device_idx}
-        python ../../src/train.py \
+        python ../../src/run.py \
             --dataset_path="${DATA_PATH}" \
-            --word_embeds_path="/ichec/work/ucd01/yongru/dataset/glove.6B/glove.6B.50d.txt" \
+            --word_embeds_path="/scratch/22204923/datasets/glove.6B/glove.6B.50d.txt" \
             --global_user_id2global_user_idx="${DATA_PATH}/global_user_id2global_user_idx.pkl" \
             --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \
             --shuffle=True \
