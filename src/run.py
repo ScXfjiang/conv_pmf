@@ -224,12 +224,12 @@ class Trainer(object):
                 if NUM_TOPIC <= avg_act_values.shape[0]
                 else torch.argsort(avg_act_values)
             )
-            sorted_tokens = list(tokens[indices].detach().cpu().numpy())
-            factor2sorted_tokens_50[factor] = sorted_tokens
-            sorted_words = [
-                self.ew_args["dictionary"].idx2word(token) for token in sorted_tokens
+            sorted_tokens_50 = list(tokens[indices].detach().cpu().numpy())
+            factor2sorted_tokens_50[factor] = sorted_tokens_50
+            sorted_words_50 = [
+                self.ew_args["dictionary"].idx2word(token) for token in sorted_tokens_50
             ]
-            factor2sorted_words_50[factor] = sorted_words
+            factor2sorted_words_50[factor] = sorted_words_50
 
         # [version 1]: keep stoptowds & punctuations from topics
         factor2sorted_tokens = {}
