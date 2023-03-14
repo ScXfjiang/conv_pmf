@@ -275,7 +275,7 @@ class Trainer(object):
             for factor, sorted_words_clean in factor2sorted_words_clean.items():
                 f.write("factor {}: {}\n".format(factor, sorted_words_clean))
 
-        # 4. calculate NPMI to evaluate topic quality
+        # 4. NPMI (Normalized (Pointwise) Mutual Information)
         token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
         npmi_util = NPMIUtil(token_cnt_mat)
         # version 1: keep stopwords & punctuations
@@ -288,6 +288,9 @@ class Trainer(object):
         self.writer.add_scalar(
             "NPMI/npmi_avg_clean", np.mean(list(factor2npmi_clean.values())), epoch_idx
         )
+
+        # 5. word similarity
+        # TODO
 
         self.writer.flush()
 
