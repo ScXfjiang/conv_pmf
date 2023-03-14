@@ -11,7 +11,6 @@ import uuid
 import numpy as np
 import scipy.sparse
 from nltk.corpus import stopwords
-from sklearn.metrics.pairwise import cosine_similarity
 
 from conv_pmf.model import ConvPMF
 from conv_pmf.dataset import Amazon
