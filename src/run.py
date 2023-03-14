@@ -323,18 +323,18 @@ class Trainer(object):
             "word2vec_similarity/w2v_sim", np.mean(cos_sims), epoch_idx
         )
         # [version 2] remove stopwords & punctuations
-        cos_sims = []
+        cos_sims_clean = []
         for factor, sorted_tokens_clean in factor2sorted_tokens_clean.items():
             k = len(sorted_tokens_clean)
             for i in range(k):
                 for j in range(i + 1, k):
                     x = trained_embeds_np[sorted_tokens_clean[i]]
                     y = trained_embeds_np[sorted_tokens_clean[j]]
-                    cos_sims.append(
+                    cos_sims_clean.append(
                         np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
                     )
         self.writer.add_scalar(
-            "word2vec_similarity/w2v_sim_clean", np.mean(cos_sims), epoch_idx
+            "word2vec_similarity/w2v_sim_clean", np.mean(cos_sims_clean), epoch_idx
         )
 
         self.writer.flush()
