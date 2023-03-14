@@ -203,10 +203,10 @@ class Trainer(object):
                 factor2token2act_stat[factor] = token2act_stat
 
         # 3. extract words ordered by average activation value
-        # [version 1]: keep stoptowds & punctuations from topics
-        factor2sorted_tokens = {}
-        factor2sorted_words = {}
-        # for each factor
+        # for each factor, we first calculate top 50 topics
+        NUM_TOPIC = 50
+        factor2sorted_tokens_50 = {}
+        factor2sorted_words_50 = {}
         for factor, token2act_stat in factor2token2act_stat.items():
             tokens = []
             avg_act_values = []
@@ -220,35 +220,52 @@ class Trainer(object):
                 device="cuda"
             )
             indices = (
-                torch.topk(avg_act_values, self.ew_args["ew_k"]).indices
-                if self.ew_args["ew_k"] <= avg_act_values.shape[0]
+                torch.topk(avg_act_values, NUM_TOPIC).indices
+                if NUM_TOPIC <= avg_act_values.shape[0]
                 else torch.argsort(avg_act_values)
             )
             sorted_tokens = list(tokens[indices].detach().cpu().numpy())
-            factor2sorted_tokens[factor] = sorted_tokens
+            factor2sorted_tokens_50[factor] = sorted_tokens
             sorted_words = [
                 self.ew_args["dictionary"].idx2word(token) for token in sorted_tokens
             ]
+            factor2sorted_words_50[factor] = sorted_words
+
+        # [version 1]: keep stoptowds & punctuations from topics
+        factor2sorted_tokens = {}
+        factor2sorted_words = {}
+        for factor, sorted_tokens_50 in factor2sorted_tokens_50.items():
+            sorted_tokens = sorted_tokens_50[: self.ew_args["ew_k"]]
+            factor2sorted_tokens[factor] = sorted_tokens
+        for factor, sorted_words_50 in factor2sorted_words_50.items():
+            sorted_words = sorted_words_50[: self.ew_args["ew_k"]]
             factor2sorted_words[factor] = sorted_words
 
         # [version 2] remove stoptowds & punctuations from topics
-        factor2sorted_words_clean = {}
         factor2sorted_tokens_clean = {}
+        factor2sorted_words_clean = {}
         to_remove = []
         to_remove.extend(stopwords.words("english"))
         to_remove.extend(list(string.punctuation))
-        # for each factor
-        for factor, sorted_words in factor2sorted_words.items():
+        for factor, sorted_words_50 in factor2sorted_words_50.items():
             sorted_words_clean = []
             sorted_tokens_clean = []
-            for word in sorted_words:
+            for word in sorted_words_50:
                 if not word in to_remove:
                     sorted_words_clean.append(word)
                     sorted_tokens_clean.append(
                         self.ew_args["dictionary"].word2idx(word)
                     )
-            factor2sorted_words_clean[factor] = sorted_words_clean
-            factor2sorted_tokens_clean[factor] = sorted_tokens_clean
+            factor2sorted_tokens_clean[factor] = (
+                sorted_tokens_clean[: self.ew_args["ew_k"]]
+                if len(sorted_tokens_clean) <= self.ew_args["ew_k"]
+                else sorted_tokens_clean
+            )
+            factor2sorted_words_clean[factor] = (
+                sorted_words_clean[: self.ew_args["ew_k"]]
+                if len(sorted_words_clean) <= self.ew_args["ew_k"]
+                else sorted_words_clean
+            )
 
         # save extracted words to text file
         words_dir = os.path.join(self.log_dir, "extracted_words")
@@ -289,7 +306,7 @@ class Trainer(object):
             "NPMI/npmi_avg_clean", np.mean(list(factor2npmi_clean.values())), epoch_idx
         )
 
-        # 5. word similarity
+        # 5. word2vec similarity
         # TODO
 
         self.writer.flush()
