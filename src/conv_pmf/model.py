@@ -59,7 +59,7 @@ class ConvPMF(nn.Module):
         user_embeds = torch.index_select(self.w_user, 0, user_indices)
         item_embeds = []
         # entropy w.r.t. all factors
-        total_entropy = 0.0
+        total_entropy = torch.zeros(1, dtype=torch.float32, device=torch.device("cuda"))
         total_entropy_num = 0
         # entropy w.r.t. each factor
         factor_entropy = torch.zeros(

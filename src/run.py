@@ -119,7 +119,9 @@ class Trainer(object):
             self.optimizer.step()
             # log total avg entropy w.r.t. all factors of each batch
             self.writer.add_scalar(
-                "Entropy/total_entropy", total_entropy, global_step,
+                "Entropy/total_entropy",
+                total_entropy.detach().cpu().numpy(),
+                global_step,
             )
             # log entropy w.r.t. each factor of each batch
             factor_entropy_np = factor_entropy.detach().cpu().numpy()
