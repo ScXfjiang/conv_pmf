@@ -32,7 +32,6 @@ class NPMIUtil:
     def __init__(self, token_cnt_mat):
         # sparse matrix: [num_doc, voc_size]
         self.token_cnt_mat = token_cnt_mat.tocsc()
-        self.npmi_cache = {}
 
     def compute_npmi(self, factor2sorted_topics):
         """
@@ -41,6 +40,7 @@ class NPMIUtil:
         """
         # npmi for each factor [n_factor,]
         factor2npmi = {}
+        npmi_cache = {}
         for factor, sorted_topics in factor2sorted_topics.items():
             # no extracted topics
             if len(sorted_topics) == 0:
@@ -51,8 +51,8 @@ class NPMIUtil:
                 for i, topic_i in enumerate(sorted_topics):
                     for topic_j in sorted_topics[i + 1 :]:
                         ij = frozenset([topic_i, topic_j])
-                        if ij in self.npmi_cache:
-                            npmi = self.npmi_cache[ij]
+                        if ij in npmi_cache:
+                            npmi = npmi_cache[ij]
                         else:
                             col_i = self.token_cnt_mat[:, topic_i]
                             col_j = self.token_cnt_mat[:, topic_j]
@@ -72,7 +72,7 @@ class NPMIUtil:
                                     - np.log2(c_i)
                                     - np.log2(c_j)
                                 ) / (np.log2(num_doc) - np.log2(c_ij))
-                            self.npmi_cache[ij] = npmi
+                            npmi_cache[ij] = npmi
                         pair_npmis.append(npmi)
                 factor2npmi[factor] = np.mean(pair_npmis)
         return factor2npmi

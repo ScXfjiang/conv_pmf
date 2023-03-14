@@ -152,13 +152,13 @@ class Trainer(object):
         self.writer.flush()
 
     def npmi_epoch(self, epoch_idx):
-        # 1 initialize trained embeddings and ew_model weights
+        # 1. initialize trained embeddings and ew_model weights
         trained_embeds = self.conv_pmf_model.state_dict()["embedding.weight"]
         conv_weight = self.conv_pmf_model.state_dict()["conv1d.weight"]
         self.ew_model.load_embeds(trained_embeds)
         self.ew_model.load_weight(conv_weight)
 
-        # 2 get activation statistics
+        # 2. get activation statistics
         # factor -> token -> (act_sum, act_cnt)
         factor2token2act_stat = {}
         for text_reviews in self.ew_loader:
@@ -202,7 +202,7 @@ class Trainer(object):
                                     token2act_stat[token] = [act_val, 1]
                 factor2token2act_stat[factor] = token2act_stat
 
-        # 3 extract words ordered by average activation value
+        # 3. [version 1] extract words ordered by average activation value
         factor2sorted_tokens = {}
         factor2sorted_words = {}
         # for each factor
@@ -242,26 +242,13 @@ class Trainer(object):
             for factor, sorted_words in factor2sorted_words.items():
                 f.write("factor {}: {}\n".format(factor, sorted_words))
 
-        # 4 calculate NPMI to evaluate topic quality
-        token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
-
-        # version 1: not remove stopwords & punctuations
-        npmi_util = NPMIUtil(token_cnt_mat)
-        # compute NPMI
-        factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
-        # log avg NPMI
-        self.writer.add_scalar(
-            "NPMI/npmi_avg", np.mean(list(factor2npmi.values())), epoch_idx
-        )
-
-        # version 2: remove stopwords & punctuations (clean)
-        npmi_util_clean = NPMIUtil(token_cnt_mat)
-        # remove stoptowds & punctuations from topics
+        # 4. [version 2] remove stoptowds & punctuations from topics
         factor2sorted_words_clean = {}
         factor2sorted_tokens_clean = {}
         to_remove = []
         to_remove.extend(stopwords.words("english"))
         to_remove.extend(list(string.punctuation))
+        # for each factor
         for factor, sorted_words in factor2sorted_words.items():
             sorted_words_clean = []
             sorted_tokens_clean = []
@@ -273,9 +260,17 @@ class Trainer(object):
                     )
             factor2sorted_words_clean[factor] = sorted_words_clean
             factor2sorted_tokens_clean[factor] = sorted_tokens_clean
-        # compute NPMI (clean)
-        factor2npmi_clean = npmi_util_clean.compute_npmi(factor2sorted_tokens_clean)
-        # log avg NPMI (clean)
+
+        # 4. calculate NPMI to evaluate topic quality
+        token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
+        npmi_util = NPMIUtil(token_cnt_mat)
+        # version 1: keep stopwords & punctuations
+        factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
+        self.writer.add_scalar(
+            "NPMI/npmi_avg", np.mean(list(factor2npmi.values())), epoch_idx
+        )
+        # version 2: remove stopwords & punctuations (clean)
+        factor2npmi_clean = npmi_util.compute_npmi(factor2sorted_tokens_clean)
         self.writer.add_scalar(
             "NPMI/npmi_avg_clean", np.mean(list(factor2npmi_clean.values())), epoch_idx
         )
