@@ -325,12 +325,12 @@ class Trainer(object):
         )
         # [version 2] remove stopwords & punctuations
         cos_sims = []
-        for factor, sorted_tokens in factor2sorted_tokens_clean.items():
-            k = len(sorted_tokens)
+        for factor, sorted_tokens_clean in factor2sorted_tokens_clean.items():
+            k = len(sorted_tokens_clean)
             for i in range(k):
                 for j in range(i + 1, k):
-                    x = trained_embeds_np[sorted_tokens[i]]
-                    y = trained_embeds_np[sorted_tokens[j]]
+                    x = trained_embeds_np[sorted_tokens_clean[i]]
+                    y = trained_embeds_np[sorted_tokens_clean[j]]
                     cos_sims.append(
                         np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
                     )
