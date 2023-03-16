@@ -101,12 +101,12 @@ class Trainer(object):
             gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
             self.optimizer.zero_grad()
             # forward
-            estimate_ratings, entropy = self.conv_pmf_model(
+            estimate_ratings, total_entropy, factor_entropy = self.conv_pmf_model(
                 user_indices, docs, with_entropy=True
             )
             mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
             if self.epsilon > 0.0:
-                loss = mse + self.epsilon * entropy
+                loss = mse + self.epsilon * total_entropy
             elif self.epsilon == 0.0:
                 loss = mse
             else:
@@ -117,10 +117,18 @@ class Trainer(object):
             # model update
             torch.nn.utils.clip_grad_norm_(self.conv_pmf_model.parameters(), 1.0)
             self.optimizer.step()
-            # log avg entropy of each batch
+            # log total avg entropy w.r.t. all factors of each batch
             self.writer.add_scalar(
-                "Entropy/entropy", entropy.detach().cpu().numpy(), global_step,
+                "Entropy/total_entropy",
+                total_entropy.detach().cpu().numpy(),
+                global_step,
             )
+            # log avg entropy w.r.t. each factor of each batch
+            factor_entropy_np = factor_entropy.detach().cpu().numpy()
+            for factor, entropy in enumerate(factor_entropy_np):
+                self.writer.add_scalar(
+                    "Entropy/factor_{}_entropy".format(factor), entropy, global_step,
+                )
         # log avg loss of each epoch
         self.writer.add_scalar(
             "Loss/train",

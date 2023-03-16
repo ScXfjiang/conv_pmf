@@ -58,8 +58,14 @@ class ConvPMF(nn.Module):
         """
         user_embeds = torch.index_select(self.w_user, 0, user_indices)
         item_embeds = []
-        entropy_sum = 0.0
-        num_entropy = 0
+        # entropy w.r.t. all factors
+        total_entropy = torch.zeros(1, dtype=torch.float32, device=torch.device("cuda"))
+        total_entropy_num = 0
+        # entropy w.r.t. each factor
+        factor_entropy = torch.zeros(
+            self.n_factor, dtype=torch.float32, device=torch.device("cuda")
+        )
+        factor_entropy_num = 0
         for doc in docs:
             if doc.shape[0] != 0:
                 # [num_review, embed_len, num_word]
@@ -72,12 +78,19 @@ class ConvPMF(nn.Module):
                     dim=0,
                     keepdim=True,
                 )
-                # [doc_total_num_review, num_word]
-                prob_dist = self.softmax_last_dim(
-                    torch.reshape(feature_map, (-1, feature_map.shape[-1]))
+                # calculate entropy statistics
+                # [n_factor, num_review, num_word]
+                prob_dist = torch.permute(self.softmax_last_dim(feature_map), (1, 0, 2))
+                # [n_factor, num_review]
+                entropy = -torch.sum(
+                    prob_dist * torch.log2(prob_dist), dim=-1, keepdim=False
                 )
-                entropy_sum += -torch.sum(prob_dist * torch.log2(prob_dist))
-                num_entropy += prob_dist.shape[0]
+                # 1. total entropy w.r.t. all factors
+                total_entropy += torch.sum(entropy)
+                total_entropy_num += entropy.shape[0] * entropy.shape[1]
+                # 2. entropy w.r.t. each factor
+                factor_entropy += torch.sum(entropy, dim=-1, keepdim=False)
+                factor_entropy_num += entropy.shape[1]
             else:
                 # deal with empty doc -> use self.bias as estimate rating
                 item_embed = torch.zeros(
@@ -89,9 +102,10 @@ class ConvPMF(nn.Module):
             item_embeds.append(item_embed)
         item_embeds = torch.cat(item_embeds, dim=0)
         estimate_ratings = torch.sum(user_embeds * item_embeds, dim=-1) + self.bias
-        entropy = entropy_sum / num_entropy
+        total_avg_entropy = total_entropy / total_entropy_num
+        factor_avg_entropy = factor_entropy / factor_entropy_num
 
-        return estimate_ratings, entropy
+        return estimate_ratings, total_avg_entropy, factor_avg_entropy
 
     def forward_without_entropy(self, user_indices, docs):
         """
