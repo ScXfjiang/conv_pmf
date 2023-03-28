@@ -23,6 +23,7 @@ class Preprocessor(object):
         1. remove stopwords & punctuations
         2. downcasing
         """
+        # TODO
         pass
 
     def split_amazon(self, ratios=[0.8, 0.1, 0.1]):
