@@ -102,12 +102,12 @@ def main():
     # the original Amazon dataset json file
     # e.g., reviews_Grocery_and_Gourmet_Food_5.json
     parser.add_argument("--src", default="", type=str)
+    # the directory to store the processed data
+    parser.add_argument("--dst", default="", type=str)
     # used to generate token_cnt_mat.npz for NPMI
     parser.add_argument("--reference", default="", type=str)
     # used to generate token_cnt_mat.npz for NPMI
     parser.add_argument("--word_embeds_path", default="", type=str)
-    # the directory to store the processed data
-    parser.add_argument("--dst", default="", type=str)
     args = parser.parse_args()
 
     # create dst directory if not exists
