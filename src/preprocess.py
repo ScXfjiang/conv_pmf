@@ -103,7 +103,7 @@ def main():
     # e.g., reviews_Grocery_and_Gourmet_Food_5.json
     parser.add_argument("--src", default="", type=str)
     # whether to remove stopwords & punctuations
-    parser.add_argument("--clear_corpus", default="Y", type=str)
+    parser.add_argument("--clean_corpus", default="Y", type=str)
     # the directory to store the processed data
     parser.add_argument("--dst", default="", type=str)
     # used to generate token_cnt_mat.npz for NPMI
@@ -120,12 +120,12 @@ def main():
 
     preprocessor = Preprocessor(args.src, args.dst)
     # 1. text preprocessing
-    if args.clear_corpus == "Y":
+    if args.clean_corpus == "Y":
         preprocessor.text_preprocessing()
-    elif args.clear_corpus == "N":
+    elif args.clean_corpus == "N":
         pass
     else:
-        raise ValueError("Invalid clear_corpus value!")
+        raise ValueError("Invalid clean_corpus value!")
     # 2. split the original Amazon dataset into train/val/test json files
     preprocessor.split_amazon(ratios=[0.8, 0.1, 0.1])
     # 3. generate global maps
