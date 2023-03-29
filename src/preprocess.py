@@ -25,7 +25,6 @@ class Preprocessor(object):
 
     def text_preprocessing(self):
         """
-        Text preprocessing.
         1. remove stopwords
         2. remove punctuations
         3. downcasing
