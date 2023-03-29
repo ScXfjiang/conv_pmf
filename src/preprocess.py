@@ -46,7 +46,7 @@ class Preprocessor(object):
                 # 3. downcase
                 words = [word.lower() for word in words]
                 js["reviewText"] = " ".join(words)
-                # append the preprocessed line to f_clean
+                # append to f_clean
                 f_clean.write((json.dumps(js) + "\n").encode("utf-8"))
         self.src = src_clean
 
