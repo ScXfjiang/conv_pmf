@@ -112,7 +112,7 @@ class Preprocessor(object):
         For now, we just use the whole Amazon dataset as the reference.
         This can be changed to a larger corpus, e.g., Wikipedia.
         Args:
-            dataset_path: the whole Amazon dataset, train + val + test
+            reference: the whole Amazon dataset, train + val + test
             word_embeds: used for creating dictionary
         """
         token_cnt_mat = gen_sparse_token_cnt_mat(reference, GloveDict6B(word_embeds))
