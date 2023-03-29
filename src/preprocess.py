@@ -7,6 +7,13 @@ import scipy
 import pandas as pd
 import json
 import pickle as pkl
+import json
+import string
+import nltk
+from nltk.corpus import stopwords
+
+nltk.download("punkt")
+nltk.download("stopwords")
 
 from common.topic_util import gen_sparse_token_cnt_mat
 from common.dictionary import GloveDict6B
@@ -20,11 +27,28 @@ class Preprocessor(object):
     def text_preprocessing(self):
         """
         Text preprocessing.
-        1. remove stopwords & punctuations
-        2. downcasing
+        1. remove stopwords
+        2. remove punctuations
+        3. downcasing
         """
-        # TODO
-        pass
+        src_clean = os.path.join(self.dst, self.src[:-5] + "_clean.json")
+        with open(self.src, "rb") as f, open(src_clean, "a+b") as f_clean:
+            for line in f:
+                js = json.loads(line)
+                # tokenization
+                words = nltk.word_tokenize(js["reviewText"])
+                # 1. filter out stop words
+                words = list(
+                    filter(lambda word: word not in stopwords.words("english"), words)
+                )
+                # 2. filter out punctuations
+                words = list(filter(lambda word: word not in string.punctuation, words))
+                # 3. downcase
+                words = [word.lower() for word in words]
+                js["reviewText"] = " ".join(words)
+                # append the preprocessed line to f_clean
+                f_clean.write((json.dumps(js) + "\n").encode("utf-8"))
+        self.src = src_clean
 
     def split_amazon(self, ratios=[0.8, 0.1, 0.1]):
         """
