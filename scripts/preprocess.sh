@@ -5,4 +5,4 @@ python ../src/preprocess.py \
     --clean_corpus="T" \
     --dst="/scratch/22200056/dataset/amazon/amazon_grocery_and_gourmet_foods_clean" \
     --reference="/scratch/22200056/dataset/amazon/reviews_Grocery_and_Gourmet_Food_5.json" \
-    --word_embeds_path="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt"
+    --word_embeds="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt"
