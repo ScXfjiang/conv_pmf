@@ -142,9 +142,9 @@ def main():
 
     preprocessor = Preprocessor(args.src, args.dst)
     # 1. text preprocessing
-    if args.clean_corpus == "Y":
+    if args.clean_corpus == "T":
         preprocessor.text_preprocessing()
-    elif args.clean_corpus == "N":
+    elif args.clean_corpus == "F":
         pass
     else:
         raise ValueError("Invalid clean_corpus value!")
