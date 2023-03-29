@@ -31,7 +31,9 @@ class Preprocessor(object):
         2. remove punctuations
         3. downcasing
         """
-        src_clean = os.path.join(self.dst, self.src[:-5] + "_clean.json")
+        src_clean = os.path.join(
+            self.dst, os.path.basename(self.src[:-5]) + "_clean.json"
+        )
         with open(self.src, "rb") as f, open(src_clean, "a+b") as f_clean:
             for line in f:
                 js = json.loads(line)
