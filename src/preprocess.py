@@ -104,18 +104,16 @@ class Preprocessor(object):
         ) as f:
             pkl.dump(global_item_id2global_item_idx, f)
 
-    def gen_token_cnt_mat(self, reference, word_embeds_path):
+    def gen_token_cnt_mat(self, reference, word_embeds):
         """
         Generate reference to calculate NPMI.
         For now, we just use the whole Amazon dataset as the reference.
         This can be changed to a larger corpus, e.g., Wikipedia.
         Args:
             dataset_path: the whole Amazon dataset, train + val + test
-            word_embeds_path: used for creating dictionary
+            word_embeds: used for creating dictionary
         """
-        token_cnt_mat = gen_sparse_token_cnt_mat(
-            reference, GloveDict6B(word_embeds_path)
-        )
+        token_cnt_mat = gen_sparse_token_cnt_mat(reference, GloveDict6B(word_embeds))
         scipy.sparse.save_npz(
             os.path.join(self.dst, "token_cnt_mat.npz"), token_cnt_mat
         )
@@ -133,7 +131,7 @@ def main():
     # used to generate token_cnt_mat.npz for NPMI
     parser.add_argument("--reference", default="", type=str)
     # used to generate token_cnt_mat.npz for NPMI
-    parser.add_argument("--word_embeds_path", default="", type=str)
+    parser.add_argument("--word_embeds", default="", type=str)
     args = parser.parse_args()
 
     # create dst directory if not exists
@@ -157,7 +155,7 @@ def main():
     # global_item_id -> global_item_idx
     preprocessor.gen_global_maps()
     # 4. generate reference to calculate NPMI
-    preprocessor.gen_token_cnt_mat(args.reference, args.word_embeds_path)
+    preprocessor.gen_token_cnt_mat(args.reference, args.word_embeds)
 
 
 if __name__ == "__main__":
