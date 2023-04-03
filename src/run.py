@@ -249,11 +249,8 @@ class Trainer(object):
             sorted_words = sorted_words_50[: self.ew_args["ew_k"]]
             factor2sorted_words[factor] = sorted_words
         # save extracted words to text file
-        original_dir = os.path.join(words_dir, "original")
-        if not os.path.exists(original_dir):
-            os.makedirs(original_dir)
         with open(
-            os.path.join(original_dir, "factor2sorted_words_{}.txt".format(epoch_idx)),
+            os.path.join(words_dir, "factor2sorted_words_{}.txt".format(epoch_idx)),
             "w",
         ) as f:
             for factor, sorted_words in factor2sorted_words.items():
