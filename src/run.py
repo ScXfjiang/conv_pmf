@@ -215,7 +215,6 @@ class Trainer(object):
         NUM_TOPIC = 50
         factor2sorted_tokens_50 = {}
         factor2sorted_words_50 = {}
-        words_dir = os.path.join(self.log_dir, "extracted_words")
         for factor, token2act_stat in factor2token2act_stat.items():
             tokens = []
             avg_act_values = []
@@ -239,7 +238,7 @@ class Trainer(object):
                 self.ew_args["dictionary"].idx2word(token) for token in sorted_tokens_50
             ]
             factor2sorted_words_50[factor] = sorted_words_50
-        # [version 1]: keep stoptowds & punctuations from topics
+        # select top k words for future use
         factor2sorted_tokens = {}
         factor2sorted_words = {}
         for factor, sorted_tokens_50 in factor2sorted_tokens_50.items():
@@ -249,70 +248,26 @@ class Trainer(object):
             sorted_words = sorted_words_50[: self.ew_args["ew_k"]]
             factor2sorted_words[factor] = sorted_words
         # save extracted words to text file
-        original_dir = os.path.join(words_dir, "original")
-        if not os.path.exists(original_dir):
-            os.makedirs(original_dir)
+        words_dir = os.path.join(self.log_dir, "extracted_words")
+        if not os.path.exists(words_dir):
+            os.makedirs(words_dir)
         with open(
-            os.path.join(original_dir, "factor2sorted_words_{}.txt".format(epoch_idx)),
+            os.path.join(words_dir, "factor2sorted_words_{}.txt".format(epoch_idx)),
             "w",
         ) as f:
             for factor, sorted_words in factor2sorted_words.items():
                 f.write("factor {}: {}\n".format(factor, sorted_words))
-        # [version 2] remove stoptowds & punctuations from topics
-        factor2sorted_tokens_clean = {}
-        factor2sorted_words_clean = {}
-        to_remove = []
-        to_remove.extend(stopwords.words("english"))
-        to_remove.extend(list(string.punctuation))
-        for factor, sorted_words_50 in factor2sorted_words_50.items():
-            sorted_words_clean = []
-            sorted_tokens_clean = []
-            for word in sorted_words_50:
-                if not word in to_remove:
-                    sorted_words_clean.append(word)
-                    sorted_tokens_clean.append(
-                        self.ew_args["dictionary"].word2idx(word)
-                    )
-            factor2sorted_tokens_clean[factor] = (
-                sorted_tokens_clean[: self.ew_args["ew_k"]]
-                if len(sorted_tokens_clean) >= self.ew_args["ew_k"]
-                else sorted_tokens_clean
-            )
-            factor2sorted_words_clean[factor] = (
-                sorted_words_clean[: self.ew_args["ew_k"]]
-                if len(sorted_words_clean) >= self.ew_args["ew_k"]
-                else sorted_words_clean
-            )
-        # save extracted words to text file
-        rm_stopwords_dir = os.path.join(words_dir, "rm_stopwords")
-        if not os.path.exists(rm_stopwords_dir):
-            os.makedirs(rm_stopwords_dir)
-        with open(
-            os.path.join(
-                rm_stopwords_dir, "factor2sorted_words_{}.txt".format(epoch_idx)
-            ),
-            "w",
-        ) as f:
-            for factor, sorted_words_clean in factor2sorted_words_clean.items():
-                f.write("factor {}: {}\n".format(factor, sorted_words_clean))
 
         # 4. NPMI (Normalized (Pointwise) Mutual Information)
         token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
         npmi_util = NPMIUtil(token_cnt_mat)
-        # [version 1] keep stopwords & punctuations
         factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
         self.writer.add_scalar(
             "NPMI/npmi_avg", np.mean(list(factor2npmi.values())), epoch_idx
         )
-        # [version 2] remove stopwords & punctuations (clean)
-        factor2npmi_clean = npmi_util.compute_npmi(factor2sorted_tokens_clean)
-        self.writer.add_scalar(
-            "NPMI/npmi_avg_clean", np.mean(list(factor2npmi_clean.values())), epoch_idx
-        )
 
         # 5. word2vec similarity
         trained_embeds_np = trained_embeds.detach().cpu().numpy()
-        # [version 1] keep stopwords & punctuations
         cos_sims = []
         for factor, sorted_tokens in factor2sorted_tokens.items():
             k = len(sorted_tokens)
@@ -325,20 +280,6 @@ class Trainer(object):
                     )
         self.writer.add_scalar(
             "word2vec_similarity/w2v_sim", np.mean(cos_sims), epoch_idx
-        )
-        # [version 2] remove stopwords & punctuations
-        cos_sims_clean = []
-        for factor, sorted_tokens_clean in factor2sorted_tokens_clean.items():
-            k = len(sorted_tokens_clean)
-            for i in range(k):
-                for j in range(i + 1, k):
-                    x = trained_embeds_np[sorted_tokens_clean[i]]
-                    y = trained_embeds_np[sorted_tokens_clean[j]]
-                    cos_sims_clean.append(
-                        np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
-                    )
-        self.writer.add_scalar(
-            "word2vec_similarity/w2v_sim_clean", np.mean(cos_sims_clean), epoch_idx
         )
 
         self.writer.flush()
