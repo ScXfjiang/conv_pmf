@@ -17,7 +17,7 @@
 # run from current directory
 cd $SLURM_SUBMIT_DIR
 
-DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods"
+DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods_clean"
 
 for n_factor in 8; do
     for epsilon in 0.0; do
@@ -32,7 +32,7 @@ for n_factor in 8; do
                     --shuffle=True \
                     --train_batch_size=256 \
                     --val_batch_size=256 \
-                    --num_epoch=35 \
+                    --num_epoch=50 \
                     --window_size=5 \
                     --n_word=16 \
                     --n_factor=${n_factor} \
