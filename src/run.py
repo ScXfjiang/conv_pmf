@@ -215,7 +215,6 @@ class Trainer(object):
         NUM_TOPIC = 50
         factor2sorted_tokens_50 = {}
         factor2sorted_words_50 = {}
-        words_dir = os.path.join(self.log_dir, "extracted_words")
         for factor, token2act_stat in factor2token2act_stat.items():
             tokens = []
             avg_act_values = []
@@ -249,6 +248,9 @@ class Trainer(object):
             sorted_words = sorted_words_50[: self.ew_args["ew_k"]]
             factor2sorted_words[factor] = sorted_words
         # save extracted words to text file
+        words_dir = os.path.join(self.log_dir, "extracted_words")
+        if not os.path.exists(words_dir):
+            os.makedirs(words_dir)
         with open(
             os.path.join(words_dir, "factor2sorted_words_{}.txt".format(epoch_idx)),
             "w",
