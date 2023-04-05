@@ -21,35 +21,33 @@ DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourm
 
 for n_factor in 8; do
     for epsilon in 0.0; do
-        for idx in 1; do
-            for cuda_device_idx in 0 1; do
-                export CUDA_VISIBLE_DEVICES=${cuda_device_idx}
-                python ../src/run.py \
-                    --dataset_path="${DATA_PATH}" \
-                    --word_embeds_path="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt" \
-                    --global_user_id2global_user_idx="${DATA_PATH}/global_user_id2global_user_idx.pkl" \
-                    --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \
-                    --shuffle=True \
-                    --train_batch_size=256 \
-                    --val_batch_size=256 \
-                    --num_epoch=35 \
-                    --window_size=5 \
-                    --n_word=64 \
-                    --n_factor=${n_factor} \
-                    --epsilon=${epsilon} \
-                    --lr=0.1 \
-                    --momentum=0.9 \
-                    --weight_decay=0.0001 \
-                    --ew_batch_size=1024 \
-                    --ew_least_act_num=30 \
-                    --ew_k=10 \
-                    --ew_token_cnt_mat_path="${DATA_PATH}/token_cnt_mat.npz" \
-                    --log_dir="n_factor_${n_factor}" \
-                    --log_dir_level_2="${epsilon}" &
-            done
-            for JOB in $(jobs -p); do
-                wait ${JOB}
-            done
+        for cuda_device_idx in 0 1; do
+            export CUDA_VISIBLE_DEVICES=${cuda_device_idx}
+            python ../src/run.py \
+                --dataset_path="${DATA_PATH}" \
+                --word_embeds_path="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt" \
+                --global_user_id2global_user_idx="${DATA_PATH}/global_user_id2global_user_idx.pkl" \
+                --global_item_id2global_item_idx="${DATA_PATH}/global_item_id2global_item_idx.pkl" \
+                --shuffle=True \
+                --train_batch_size=256 \
+                --val_batch_size=256 \
+                --num_epoch=35 \
+                --window_size=5 \
+                --n_word=64 \
+                --n_factor=${n_factor} \
+                --epsilon=${epsilon} \
+                --lr=0.1 \
+                --momentum=0.9 \
+                --weight_decay=0.0001 \
+                --ew_batch_size=1024 \
+                --ew_least_act_num=30 \
+                --ew_k=10 \
+                --ew_token_cnt_mat_path="${DATA_PATH}/token_cnt_mat.npz" \
+                --log_dir="n_factor_${n_factor}" \
+                --log_dir_level_2="${epsilon}" &
+        done
+        for JOB in $(jobs -p); do
+            wait ${JOB}
         done
     done
 done
