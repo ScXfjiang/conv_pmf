@@ -8,7 +8,7 @@
 #SBATCH --gres=gpu:2
 # specify number of tasks/cores per node required
 #SBATCH --ntasks-per-node=35
-# specify the walltime e.g 96 hours
+# specify the walltime e.g 192 hours
 #SBATCH -t 192:00:00
 # set to email at start,end and failed jobs
 #SBATCH --mail-type=ALL
