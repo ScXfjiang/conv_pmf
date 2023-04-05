@@ -25,9 +25,9 @@ class Preprocessor(object):
 
     def text_preprocessing(self):
         """
-        1. remove stopwords
-        2. remove punctuations
-        3. downcasing
+        1. downcasing
+        2. remove stopwords
+        3. remove punctuations
         """
         src_clean = os.path.join(
             self.dst, os.path.basename(self.src[:-5]) + "_clean.json"
@@ -37,14 +37,14 @@ class Preprocessor(object):
                 js = json.loads(line)
                 # tokenization
                 words = nltk.word_tokenize(js["reviewText"])
-                # 1. filter out stop words
+                # 1. downcase
+                words = [word.lower() for word in words]
+                # 2. filter out stop words
                 words = list(
                     filter(lambda word: word not in stopwords.words("english"), words)
                 )
-                # 2. filter out punctuations
+                # 3. filter out punctuations
                 words = list(filter(lambda word: word not in string.punctuation, words))
-                # 3. downcase
-                words = [word.lower() for word in words]
                 js["reviewText"] = " ".join(words)
                 # append to f_clean
                 f_clean.write((json.dumps(js) + "\n").encode("utf-8"))
