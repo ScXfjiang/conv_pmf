@@ -80,7 +80,7 @@ class Trainer(object):
             self.metric_epoch(epoch_idx)
             metric_epoch_end = time.time()
             show_elapsed_time(
-                metric_epoch_start, metric_epoch_end, "npmi epoch {}".format(epoch_idx)
+                metric_epoch_start, metric_epoch_end, "metric epoch {}".format(epoch_idx)
             )
         # save final checkpoint
         torch.save(
