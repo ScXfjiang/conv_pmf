@@ -163,6 +163,8 @@ class Trainer(object):
         # 1. initialize trained embeddings and ew_model weights
         trained_embeds = self.conv_pmf_model.state_dict()["embedding.weight"]
         conv_weight = self.conv_pmf_model.state_dict()["conv1d.weight"]
+        self.ew_model.eval()
+        self.ew_model.cuda()
         self.ew_model.load_embeds(trained_embeds)
         self.ew_model.load_weight(conv_weight)
 
