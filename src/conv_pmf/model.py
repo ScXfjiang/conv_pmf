@@ -66,6 +66,11 @@ class ConvPMF(nn.Module):
             self.n_factor, dtype=torch.float32, device=torch.device("cuda")
         )
         factor_entropy_num = 0
+        # kl divergence
+        batch_kl_div_sum = torch.zeros(
+            1, dtype=torch.float32, device=torch.device("cuda")
+        )
+        batch_kl_div_num = 0
         for doc in docs:
             if doc.shape[0] != 0:
                 # [num_review, embed_len, num_word]
@@ -93,18 +98,24 @@ class ConvPMF(nn.Module):
                 factor_entropy_num += entropy.shape[1]
                 # 2. calculate kl divergence
                 # [n_factor, num_review * num_word]
-                kl_div = 0.0
+                doc_kl_div_sum = torch.zeros(
+                    1, dtype=torch.float32, device=torch.device("cuda")
+                )
                 for i in range(self.n_factor):
                     for j in range(i + 1, self.n_factor):
-                        kl_div += torch.mean(
+                        # doc_kl_div_sum += factor pairwise kl divergence w.r.t. a doc
+                        doc_kl_div_sum += torch.mean(
                             torch.sum(
                                 prob_dist[i]
                                 * (torch.log(prob_dist[i]) - torch.log(prob_dist[j])),
                                 axis=-1,
                             )
                         )
-
-                kl_div_avg = kl_div / (self.n_factor * (self.n_factor - 1) / 2)
+                doc_kl_div_avg = doc_kl_div_sum / (
+                    self.n_factor * (self.n_factor - 1) / 2
+                )
+                batch_kl_div_sum += doc_kl_div_avg
+                batch_kl_div_num += 1
             else:
                 # deal with empty doc -> use self.bias as estimate rating
                 item_embed = torch.zeros(
@@ -118,8 +129,9 @@ class ConvPMF(nn.Module):
         estimate_ratings = torch.sum(user_embeds * item_embeds, dim=-1) + self.bias
         total_avg_entropy = total_entropy / total_entropy_num
         factor_avg_entropy = factor_entropy / factor_entropy_num
+        batch_kl_div_avg = batch_kl_div_sum / batch_kl_div_num
 
-        return estimate_ratings, total_avg_entropy, factor_avg_entropy, kl_div_avg
+        return estimate_ratings, total_avg_entropy, factor_avg_entropy, batch_kl_div_avg
 
     def forward_without_entropy(self, user_indices, docs):
         """
