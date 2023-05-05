@@ -239,12 +239,12 @@ class Trainer(object):
             tokens = []
             avg_act_values = []
             for token, (act_sum, act_cnt) in token2act_stat.items():
-                # for topic kl divergence
-                act_dist[factor][token] = float(float(act_sum) / act_cnt)
                 if act_cnt < self.ew_args["ew_least_act_num"]:
                     continue
                 tokens.append(token)
                 avg_act_values.append(float(float(act_sum) / act_cnt))
+                # for topic kl divergence
+                act_dist[factor][token] = float(float(act_sum) / act_cnt)
             tokens = torch.tensor(tokens, dtype=torch.int32).to(device="cuda")
             avg_act_values = torch.tensor(avg_act_values, dtype=torch.float32).to(
                 device="cuda"
