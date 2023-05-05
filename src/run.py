@@ -136,7 +136,9 @@ class Trainer(object):
                 )
             # log kl divergence of each batch
             self.writer.add_scalar(
-                "KL_divergence/review_kl_div", kl_div.detach().cpu().numpy(), global_step,
+                "KL_divergence/review_kl_div",
+                kl_div.detach().cpu().numpy(),
+                global_step,
             )
         # log avg loss of each epoch
         self.writer.add_scalar(
@@ -285,8 +287,7 @@ class Trainer(object):
             for j in range(i + 1, self.ew_args["n_factor"]):
                 # kl divergence between factor i and factor j
                 topic_kl_div_sum += torch.sum(
-                    act_dist[i] * (torch.log(act_dist[i]) - torch.log(act_dist[j])),
-                    axis=-1,
+                    act_dist[i] * (torch.log(act_dist[i]) - torch.log(act_dist[j]))
                 )
         topic_kl_div = topic_kl_div_sum / (
             self.ew_args["n_factor"] * (self.ew_args["n_factor"] - 1) / 2
