@@ -136,9 +136,7 @@ class Trainer(object):
                 )
             # log kl divergence of each batch
             self.writer.add_scalar(
-                "KL_divergence/review_kl_div",
-                kl_div.detach().cpu().numpy(),
-                global_step,
+                "KL_divergence/review_kl_div", kl_div.detach().cpu().numpy(), global_step,
             )
         # log avg loss of each epoch
         self.writer.add_scalar(
