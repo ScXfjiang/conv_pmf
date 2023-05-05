@@ -136,7 +136,9 @@ class Trainer(object):
                 )
             # log kl divergence of each batch
             self.writer.add_scalar(
-                "KL_divergence/kl_div", kl_div.detach().cpu().numpy(), global_step,
+                "KL_divergence/review_kl_div",
+                kl_div.detach().cpu().numpy(),
+                global_step,
             )
         # log avg loss of each epoch
         self.writer.add_scalar(
@@ -226,6 +228,13 @@ class Trainer(object):
         NUM_TOPIC = 50
         factor2sorted_tokens_50 = {}
         factor2sorted_words_50 = {}
+        dictionary = self.ew_args["dictionary"]
+        # for topic kl divergence
+        act_dist = torch.zeros(
+            (self.ew_args["n_factor"], dictionary.vocab_size()),
+            dtype=torch.float32,
+            device="cuda",
+        )
         for factor, token2act_stat in factor2token2act_stat.items():
             tokens = []
             avg_act_values = []
@@ -234,6 +243,8 @@ class Trainer(object):
                     continue
                 tokens.append(token)
                 avg_act_values.append(float(float(act_sum) / act_cnt))
+                # for topic kl divergence
+                act_dist[factor][token] = float(float(act_sum) / act_cnt)
             tokens = torch.tensor(tokens, dtype=torch.int32).to(device="cuda")
             avg_act_values = torch.tensor(avg_act_values, dtype=torch.float32).to(
                 device="cuda"
@@ -245,9 +256,7 @@ class Trainer(object):
             )
             sorted_tokens_50 = list(tokens[indices].detach().cpu().numpy())
             factor2sorted_tokens_50[factor] = sorted_tokens_50
-            sorted_words_50 = [
-                self.ew_args["dictionary"].idx2word(token) for token in sorted_tokens_50
-            ]
+            sorted_words_50 = [dictionary.idx2word(token) for token in sorted_tokens_50]
             factor2sorted_words_50[factor] = sorted_words_50
         # select top k words for future use
         factor2sorted_tokens = {}
@@ -269,7 +278,26 @@ class Trainer(object):
             for factor, sorted_words in factor2sorted_words.items():
                 f.write("factor {}: {}\n".format(factor, sorted_words))
 
-        # 4. NPMI (Normalized (Pointwise) Mutual Information)
+        # 4. topic kl divergence
+        act_dist = torch.nn.functional.softmax(act_dist, dim=-1)
+        topic_kl_div_sum = torch.zeros(
+            1, dtype=torch.float32, device=torch.device("cuda")
+        )
+        for i in range(self.ew_args["n_factor"]):
+            for j in range(i + 1, self.ew_args["n_factor"]):
+                # kl divergence between factor i and factor j
+                topic_kl_div_sum += torch.sum(
+                    act_dist[i] * (torch.log(act_dist[i]) - torch.log(act_dist[j])),
+                    axis=-1,
+                )
+        topic_kl_div = topic_kl_div_sum / (
+            self.ew_args["n_factor"] * (self.ew_args["n_factor"] - 1) / 2
+        )
+        self.writer.add_scalar(
+            "KL_divergence/topic_kl_div", topic_kl_div.detach().cpu().numpy(), epoch_idx
+        )
+
+        # 5. NPMI (Normalized (Pointwise) Mutual Information)
         token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
         npmi_util = NPMIUtil(token_cnt_mat)
         factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
@@ -277,7 +305,7 @@ class Trainer(object):
             "NPMI/npmi_avg", np.mean(list(factor2npmi.values())), epoch_idx
         )
 
-        # 5. word2vec similarity
+        # 6. word2vec similarity
         trained_embeds_np = trained_embeds.detach().cpu().numpy()
         cos_sims = []
         for factor, sorted_tokens in factor2sorted_tokens.items():
