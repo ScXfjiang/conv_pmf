@@ -66,11 +66,6 @@ class ConvPMF(nn.Module):
             self.n_factor, dtype=torch.float32, device=torch.device("cuda")
         )
         factor_entropy_num = 0
-        # kl divergence
-        batch_kl_div_sum = torch.zeros(
-            1, dtype=torch.float32, device=torch.device("cuda")
-        )
-        batch_kl_div_num = 0
         for doc in docs:
             if doc.shape[0] != 0:
                 # [num_review, embed_len, num_word]
@@ -83,39 +78,19 @@ class ConvPMF(nn.Module):
                     dim=0,
                     keepdim=True,
                 )
-                # 1. calculate entropy
+                # calculate entropy statistics
                 # [n_factor, num_review, num_word]
                 prob_dist = torch.permute(self.softmax_last_dim(feature_map), (1, 0, 2))
                 # [n_factor, num_review]
                 entropy = -torch.sum(
                     prob_dist * torch.log2(prob_dist), dim=-1, keepdim=False
                 )
-                # total entropy w.r.t. all factors
+                # 1. total entropy w.r.t. all factors
                 total_entropy += torch.sum(entropy)
                 total_entropy_num += entropy.shape[0] * entropy.shape[1]
-                # entropy w.r.t. each factor
+                # 2. entropy w.r.t. each factor
                 factor_entropy += torch.sum(entropy, dim=-1, keepdim=False)
                 factor_entropy_num += entropy.shape[1]
-                # 2. calculate kl divergence
-                # [n_factor, num_review * num_word]
-                doc_kl_div_sum = torch.zeros(
-                    1, dtype=torch.float32, device=torch.device("cuda")
-                )
-                for i in range(self.n_factor):
-                    for j in range(i + 1, self.n_factor):
-                        # doc_kl_div_sum += factor pairwise kl divergence w.r.t. a doc
-                        doc_kl_div_sum += torch.mean(
-                            torch.sum(
-                                prob_dist[i]
-                                * (torch.log(prob_dist[i]) - torch.log(prob_dist[j])),
-                                axis=-1,
-                            )
-                        )
-                doc_kl_div_avg = doc_kl_div_sum / (
-                    self.n_factor * (self.n_factor - 1) / 2
-                )
-                batch_kl_div_sum += doc_kl_div_avg
-                batch_kl_div_num += 1
             else:
                 # deal with empty doc -> use self.bias as estimate rating
                 item_embed = torch.zeros(
@@ -129,9 +104,8 @@ class ConvPMF(nn.Module):
         estimate_ratings = torch.sum(user_embeds * item_embeds, dim=-1) + self.bias
         total_avg_entropy = total_entropy / total_entropy_num
         factor_avg_entropy = factor_entropy / factor_entropy_num
-        batch_kl_div_avg = batch_kl_div_sum / batch_kl_div_num
 
-        return estimate_ratings, total_avg_entropy, factor_avg_entropy, batch_kl_div_avg
+        return estimate_ratings, total_avg_entropy, factor_avg_entropy
 
     def forward_without_entropy(self, user_indices, docs):
         """
