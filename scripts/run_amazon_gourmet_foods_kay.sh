@@ -20,7 +20,7 @@ module load cuda/11.3
 DATA_PATH="/ichec/work/ucd01/xfjiang/dataset/amazon/amazon_grocery_and_gourmet_foods_clean"
 
 for n_factor in 8; do
-    for epsilon in 0.0; do
+    for epsilon in 0.0 0.01 0.05 0.1 0.5 1.0 3.0; do
         for cuda_device_idx in 0 1; do
             export CUDA_VISIBLE_DEVICES=${cuda_device_idx}
             python ../src/run.py \
@@ -40,7 +40,7 @@ for n_factor in 8; do
                 --momentum=0.9 \
                 --weight_decay=0.0001 \
                 --ew_batch_size=1024 \
-                --ew_least_act_num=30 \
+                --ew_least_act_num=10 \
                 --ew_k=10 \
                 --ew_token_cnt_mat_path="${DATA_PATH}/token_cnt_mat.npz" \
                 --log_dir="n_factor_${n_factor}" \
