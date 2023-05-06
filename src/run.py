@@ -80,9 +80,7 @@ class Trainer(object):
             self.metric_epoch(epoch_idx)
             metric_epoch_end = time.time()
             show_elapsed_time(
-                metric_epoch_start,
-                metric_epoch_end,
-                "metric epoch {}".format(epoch_idx),
+                metric_epoch_start, metric_epoch_end, "metric epoch {}".format(epoch_idx)
             )
         # save final checkpoint
         torch.save(
@@ -103,12 +101,9 @@ class Trainer(object):
             gt_ratings = gt_ratings.to(device="cuda", dtype=torch.float32)
             self.optimizer.zero_grad()
             # forward
-            (
-                estimate_ratings,
-                total_entropy,
-                factor_entropy,
-                kl_div,
-            ) = self.conv_pmf_model(user_indices, docs, with_entropy=True)
+            estimate_ratings, total_entropy, factor_entropy = self.conv_pmf_model(
+                user_indices, docs, with_entropy=True
+            )
             mse = torch.nn.functional.mse_loss(estimate_ratings, gt_ratings)
             if self.epsilon > 0.0:
                 loss = mse + self.epsilon * total_entropy
@@ -134,10 +129,6 @@ class Trainer(object):
                 self.writer.add_scalar(
                     "Entropy/factor_{}_entropy".format(factor), entropy, global_step,
                 )
-            # log kl divergence of each batch
-            self.writer.add_scalar(
-                "KL_divergence/kl_div", kl_div.detach().cpu().numpy(), global_step,
-            )
         # log avg loss of each epoch
         self.writer.add_scalar(
             "Loss/train",
