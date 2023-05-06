@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --job-name=conv_pmf
+#SBATCH --job-name=maskrcnn
 # speficity number of nodes
 #SBATCH -N 1
 # specify the gpu queue
