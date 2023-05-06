@@ -11,7 +11,7 @@ python ../src/run.py \
     --val_batch_size=256 \
     --num_epoch=35 \
     --window_size=5 \
-    --n_word=16 \
+    --n_word=64 \
     --n_factor=8 \
     --epsilon=0.0 \
     --lr=0.1 \
