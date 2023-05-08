@@ -76,12 +76,13 @@ class Trainer(object):
                 val_epoch_start, val_epoch_end, "val epoch {}".format(epoch_idx)
             )
             # 3. calculate topic quality after training each epoch
-            metric_epoch_start = time.time()
-            self.metric_epoch(epoch_idx)
-            metric_epoch_end = time.time()
-            show_elapsed_time(
-                metric_epoch_start, metric_epoch_end, "metric epoch {}".format(epoch_idx)
-            )
+            if epoch_idx >= 31:
+                metric_epoch_start = time.time()
+                self.metric_epoch(epoch_idx)
+                metric_epoch_end = time.time()
+                show_elapsed_time(
+                    metric_epoch_start, metric_epoch_end, "metric epoch {}".format(epoch_idx)
+                )
         # save final checkpoint
         torch.save(
             self.conv_pmf_model.state_dict(),
