@@ -20,7 +20,7 @@ cd $SLURM_SUBMIT_DIR
 DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods_clean"
 
 for n_factor in 8; do
-    for epsilon in 0.0 0.01 0.05 0.1 0.5 1.0 3.0; do
+    for epsilon in 0.0 0.4 0.8 1.2 1.6 2.0; do
         for cuda_device_idx in 0 1; do
             export CUDA_VISIBLE_DEVICES=${cuda_device_idx}
             python ../src/run.py \
