@@ -233,7 +233,10 @@ class Trainer(object):
             for token, (act_sum, act_cnt) in token2act_stat.items():
                 if act_cnt < self.ew_args["ew_least_act_num"]:
                     continue
-                if token == dictionary.pad_idx() or token == dictionary.unk_idx():
+                if (
+                    token == dictionary.padding_idx()
+                    or token == dictionary.unknown_idx()
+                ):
                     continue
                 tokens.append(token)
                 avg_act_values.append(float(float(act_sum) / act_cnt))
