@@ -303,7 +303,7 @@ class Trainer(object):
 
         # 6. word2vec similarity (trained_embeds)
         trained_embeds_np = trained_embeds.detach().cpu().numpy()
-        original_embeds_np = self.ew_args["word_embeds"]
+        original_embeds_np = self.ew_args["word_embeds"].embed_matrix()
         cos_sims_trained = []
         cos_sims_original = []
         for factor, sorted_tokens in factor2sorted_tokens.items():
