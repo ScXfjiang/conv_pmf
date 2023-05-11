@@ -127,11 +127,11 @@ class Trainer(object):
                 global_step,
             )
             # log avg entropy w.r.t. each factor of each batch
-            factor_entropy_np = factor_entropy.detach().cpu().numpy()
-            for factor, entropy in enumerate(factor_entropy_np):
-                self.writer.add_scalar(
-                    "Entropy/factor_{}_entropy".format(factor), entropy, global_step,
-                )
+            # factor_entropy_np = factor_entropy.detach().cpu().numpy()
+            # for factor, entropy in enumerate(factor_entropy_np):
+            #     self.writer.add_scalar(
+            #         "Entropy/factor_{}_entropy".format(factor), entropy, global_step,
+            #     )
         # log avg loss of each epoch
         self.writer.add_scalar(
             "Loss/train",
