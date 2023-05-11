@@ -303,34 +303,32 @@ class Trainer(object):
 
         # 6. word2vec similarity (trained_embeds)
         trained_embeds_np = trained_embeds.detach().cpu().numpy()
-        cos_sims = []
+        original_embeds_np = self.ew_args["word_embeds"].embed_matrix()
+        cos_sims_trained = []
+        cos_sims_original = []
         for factor, sorted_tokens in factor2sorted_tokens.items():
             k = len(sorted_tokens)
             for i in range(k):
                 for j in range(i + 1, k):
-                    x = trained_embeds_np[sorted_tokens[i]]
-                    y = trained_embeds_np[sorted_tokens[j]]
-                    cos_sims.append(
-                        np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
+                    x_trained = trained_embeds_np[sorted_tokens[i]]
+                    y_trained = trained_embeds_np[sorted_tokens[j]]
+                    x_original = original_embeds_np[sorted_tokens[i]]
+                    y_original = original_embeds_np[sorted_tokens[j]]
+                    cos_sims_trained.append(
+                        np.dot(x_trained, y_trained)
+                        / (np.linalg.norm(x_trained) * np.linalg.norm(y_trained))
+                    )
+                    cos_sims_original.append(
+                        np.dot(x_original, y_original)
+                        / (np.linalg.norm(x_original) * np.linalg.norm(y_original))
                     )
         self.writer.add_scalar(
-            "word2vec_similarity/w2v_sim(trained_embeds)", np.mean(cos_sims), epoch_idx
+            "word2vec_similarity/trained_embeds", np.mean(cos_sims_trained), epoch_idx,
         )
-
-        # 7. word2vec similarity (original_embeds)
-        original_embeds = self.ew_args["word_embeds"]
-        cos_sims = []
-        for factor, sorted_tokens in factor2sorted_tokens.items():
-            k = len(sorted_tokens)
-            for i in range(k):
-                for j in range(i + 1, k):
-                    x = original_embeds[sorted_tokens[i]]
-                    y = original_embeds[sorted_tokens[j]]
-                    cos_sims.append(
-                        np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
-                    )
         self.writer.add_scalar(
-            "word2vec_similarity/w2v_sim(original_embeds)", np.mean(cos_sims), epoch_idx
+            "word2vec_similarity/original_embeds",
+            np.mean(cos_sims_original),
+            epoch_idx,
         )
 
         self.writer.flush()
