@@ -24,7 +24,7 @@ python ../src/extract_words.py \
     --dataset_path="${DATA_PATH}" \
     --word_embeds_path="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt" \
     --checkpoint_path="${CHECKPOINT_PATH}" \
-    --n_factor=${n_factor} \
+    --n_factor=8 \
     --n_word=64 \
     --window_size=5 \
     --batch_size=1024 \
