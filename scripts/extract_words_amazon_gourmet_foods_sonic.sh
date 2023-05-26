@@ -1,4 +1,4 @@
-#!/bin/bash -l
+#!/home/people/22200056/bin/zsh
 #SBATCH --job-name=extract_words
 # speficity number of nodes
 #SBATCH -N 1
@@ -18,15 +18,28 @@
 cd $SLURM_SUBMIT_DIR
 
 DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods_clean"
-CHECKPOINT_PATH="/scratch/22200056/experiment/conv_pmf/original_embeds/n_factor_8/scripts/log/n_factor_8/0.0/May-11-2023-23-23-22-4b6cf107-19a8-4c27-9f92-7a83a6c6cf49/checkpoint/checkpoint_final.pt"
+CHECKPOINT_ROOT="/home/people/22200056/scratch/experiment/conv_pmf_results_final"
 
-python ../src/extract_words.py \
-    --dataset_path="${DATA_PATH}" \
-    --word_embeds_path="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt" \
-    --checkpoint_path="${CHECKPOINT_PATH}" \
-    --n_factor=8 \
-    --n_word=64 \
-    --window_size=5 \
-    --batch_size=1024 \
-    --least_act_num=20 \
-    --k=10 &
+for n_factor in 8; do
+    for epsilon in 0.0 0.4 0.8 1.2 1.6 2.0; do
+        CHECKPOINT_DIR="${CHECKPOINT_ROOT}/n_factor_${n_factor}/${epsilon}"
+        checkpoint_files=()
+        for ENTRY in "${CHECKPOINT_DIR}"/*; do
+            checkpoint_files+="${ENTRY}/checkpoint/checkpoint_final.pt"
+        done
+        for checkpoint in ${checkpoint_files}; do
+            python ../src/extract_words.py \
+                --dataset_path="${DATA_PATH}" \
+                --word_embeds_path="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt" \
+                --checkpoint_path="${CHECKPOINT_PATH}" \
+                --n_factor=${n_factor} \
+                --n_word=64 \
+                --window_size=5 \
+                --batch_size=1024 \
+                --least_act_num=20 \
+                --k=10 \
+                --log_dir_level_1="n_factor_${n_factor}" \
+                --log_dir_level_2="${epsilon}"
+        done
+    done
+done
