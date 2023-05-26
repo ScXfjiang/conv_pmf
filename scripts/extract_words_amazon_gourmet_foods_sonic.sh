@@ -20,7 +20,7 @@ cd $SLURM_SUBMIT_DIR
 DATA_PATH="/home/people/22200056/scratch/dataset/amazon/amazon_grocery_and_gourmet_foods_clean"
 CHECKPOINT_ROOT="/home/people/22200056/scratch/experiment/conv_pmf_results_final"
 
-for n_factor in 8; do
+for n_factor in 6 8 10 12; do
     for epsilon in 0.0 0.4 0.8 1.2 1.6 2.0; do
         CHECKPOINT_DIR="${CHECKPOINT_ROOT}/n_factor_${n_factor}/${epsilon}"
         checkpoint_files=()
