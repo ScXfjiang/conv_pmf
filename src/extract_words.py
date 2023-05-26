@@ -179,7 +179,7 @@ def main():
     with open(os.path.join(words_dir, "factor2sorted_words.txt"), "w",) as f:
         for factor, sorted_words in factor2sorted_words.items():
             f.write("factor {}: {}\n".format(factor, sorted_words))
-            f.write("factor {}: {}\n ".format(factor, sorted_act_values))
+            f.write("factor {}: {}\n".format(factor, sorted_act_values))
 
     # 3. word2vec similarity (trained_embeds)
     trained_embeds_np = trained_embeds.detach().cpu().numpy()
