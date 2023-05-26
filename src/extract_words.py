@@ -5,11 +5,8 @@ import os
 
 import torch
 import numpy as np
-import pickle as pkl
 import uuid
-import scipy.sparse
 
-from common.topic_util import NPMIUtil
 from extract_words.model import ExtractWords
 from extract_words.dataset import EWAmazon
 from common.dictionary import GloveDict6B
