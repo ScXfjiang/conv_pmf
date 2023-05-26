@@ -127,6 +127,7 @@ def main():
     NUM_TOPIC = 50
     factor2sorted_tokens_50 = {}
     factor2sorted_words_50 = {}
+    factor2sorted_act_values_50 = {}
     # for topic kl divergence
     act_dist = torch.zeros(
         (args.n_factor, dictionary.vocab_size()), dtype=torch.float32, device="cuda",
@@ -156,15 +157,21 @@ def main():
         factor2sorted_tokens_50[factor] = sorted_tokens_50
         sorted_words_50 = [dictionary.idx2word(token) for token in sorted_tokens_50]
         factor2sorted_words_50[factor] = sorted_words_50
+        sorted_act_values_50 = list(avg_act_values[indices].detach().cpu().numpy())
+        factor2sorted_act_values_50[factor] = sorted_act_values_50
     # select top k words for future use
     factor2sorted_tokens = {}
     factor2sorted_words = {}
+    factor2sorted_act_values = {}
     for factor, sorted_tokens_50 in factor2sorted_tokens_50.items():
         sorted_tokens = sorted_tokens_50[: args.k]
         factor2sorted_tokens[factor] = sorted_tokens
     for factor, sorted_words_50 in factor2sorted_words_50.items():
         sorted_words = sorted_words_50[: args.k]
         factor2sorted_words[factor] = sorted_words
+    for factor, sorted_act_values_50 in factor2sorted_act_values_50.items():
+        sorted_act_values = sorted_act_values_50[: args.k]
+        factor2sorted_act_values[factor] = sorted_act_values
     # save extracted words to text file
     words_dir = os.path.join(log_dir, "extracted_words")
     if not os.path.exists(words_dir):
@@ -172,6 +179,7 @@ def main():
     with open(os.path.join(words_dir, "factor2sorted_words.txt"), "w",) as f:
         for factor, sorted_words in factor2sorted_words.items():
             f.write("factor {}: {}\n".format(factor, sorted_words))
+            f.write("factor {}: {}\n ".format(factor, sorted_act_values))
 
     # 3. word2vec similarity (trained_embeds)
     trained_embeds_np = trained_embeds.detach().cpu().numpy()
