@@ -39,10 +39,7 @@ for n_factor in 6 8 10 12; do
                 --least_act_num=20 \
                 --k=10 \
                 --log_dir_level_1="n_factor_${n_factor}" \
-                --log_dir_level_2="${epsilon}" &
-            for JOB in $(jobs -p); do
-                wait ${JOB}
-            done
+                --log_dir_level_2="${epsilon}"
         done
     done
 done
