@@ -31,7 +31,7 @@ for n_factor in 6 8 10 12; do
             python ../src/extract_words.py \
                 --dataset_path="${DATA_PATH}" \
                 --word_embeds_path="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt" \
-                --checkpoint_path="${CHECKPOINT_PATH}" \
+                --checkpoint_path="${checkpoint}" \
                 --n_factor=${n_factor} \
                 --n_word=64 \
                 --window_size=5 \
