@@ -121,6 +121,7 @@ def main():
                                 token2act_stat[token] = [act_val, 1]
                 elif args.strategy == "max":
                     max_idx = np.argmax(review_acts)
+                    act_val = review_acts[max_idx]
                     max_tokens = []
                     max_tokens.append(review_tokens[max_idx])
                     for offset in range(1, (args.window_size - 1) // 2 + 1):
