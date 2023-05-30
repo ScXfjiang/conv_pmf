@@ -23,6 +23,7 @@ def main():
     parser.add_argument("--n_word", default=128, type=int)
     parser.add_argument("--window_size", default=5, type=int)
     # extract words args
+    parser.add_argument("--strategy", default="", type=str)
     parser.add_argument("--batch_size", default=128, type=int)
     parser.add_argument("--entropy_threshold", type=float, default=float("inf"))
     parser.add_argument("--least_act_num", default=50, type=int)
@@ -31,6 +32,7 @@ def main():
     parser.add_argument("--log_dir_level_1", default="", type=str)
     parser.add_argument("--log_dir_level_2", default="", type=str)
     args = parser.parse_args()
+    assert args.strategy in ["all", "max"]
 
     # initialize log_dir
     today = date.today()
@@ -54,6 +56,7 @@ def main():
         f.write("n_factor: {}\n".format(args.n_factor))
         f.write("n_word: {}\n".format(args.n_word))
         f.write("window_size: {}\n".format(args.window_size))
+        f.write("strategy: {}\n".format(args.strategy))
         f.write("batch_size: {}\n".format(args.batch_size))
         f.write("entropy_threshold: {}\n".format(args.entropy_threshold))
         f.write("least_act_num: {}\n".format(args.least_act_num))
@@ -98,22 +101,41 @@ def main():
                 # [n_words,]
                 review_tokens = text_reviews[review_idx].detach().cpu().numpy()
                 assert review_acts.shape == review_tokens.shape
-                # note that act_idx == token_idx (padding="same" in conv)
-                for act_idx in range(review_tokens.shape[0]):
-                    act_val = review_acts[act_idx]
-                    act_tokens = []
-                    act_tokens.append(review_tokens[act_idx])
+
+                # note that act_idx == token_idx (padding="same" in conv op)
+                if args.strategy == "all":
+                    for act_idx in range(review_tokens.shape[0]):
+                        act_val = review_acts[act_idx]
+                        act_tokens = []
+                        act_tokens.append(review_tokens[act_idx])
+                        for offset in range(1, (args.window_size - 1) // 2 + 1):
+                            if act_idx - offset >= 0:
+                                act_tokens.append(review_tokens[act_idx - offset])
+                            if act_idx + offset < review_tokens.shape[0]:
+                                act_tokens.append(review_tokens[act_idx + offset])
+                        for token in act_tokens:
+                            if token in token2act_stat:
+                                token2act_stat[token][0] += act_val
+                                token2act_stat[token][1] += 1
+                            else:
+                                token2act_stat[token] = [act_val, 1]
+                elif args.strategy == "max":
+                    max_idx = np.argmax(review_acts)
+                    max_tokens = []
+                    max_tokens.append(review_tokens[max_idx])
                     for offset in range(1, (args.window_size - 1) // 2 + 1):
-                        if act_idx - offset >= 0:
-                            act_tokens.append(review_tokens[act_idx - offset])
-                        if act_idx + offset < review_tokens.shape[0]:
-                            act_tokens.append(review_tokens[act_idx + offset])
-                    for token in act_tokens:
+                        if max_idx - offset >= 0:
+                            max_tokens.append(review_tokens[max_idx - offset])
+                        if max_idx + offset < review_tokens.shape[0]:
+                            max_tokens.append(review_tokens[max_idx + offset])
+                    for token in max_tokens:
                         if token in token2act_stat:
                             token2act_stat[token][0] += act_val
                             token2act_stat[token][1] += 1
                         else:
                             token2act_stat[token] = [act_val, 1]
+                else:
+                    raise NotImplementedError
             factor2token2act_stat[factor] = token2act_stat
     # 2. extract words ordered by average activation value
     # for each factor, we first extract top 50 words
@@ -168,30 +190,23 @@ def main():
             f.write("factor {}: {}\n".format(factor, factor2sorted_words[factor]))
             f.write("factor {}: {}\n".format(factor, factor2sorted_act_values[factor]))
 
-    # 3. word2vec similarity
-    trained_embeds_np = trained_embeds.detach().cpu().numpy()
+    # 3. word2vec similarity (original)
     original_embeds_np = original_embeds.embed_matrix()
-    cos_sims_trained = []
-    cos_sims_original = []
+    cos_sims_all = []
     for factor, sorted_tokens in factor2sorted_tokens.items():
+        cos_sims_factor = []
         k = len(sorted_tokens)
         for i in range(k):
             for j in range(i + 1, k):
-                x_trained = trained_embeds_np[sorted_tokens[i]]
-                y_trained = trained_embeds_np[sorted_tokens[j]]
-                x_original = original_embeds_np[sorted_tokens[i]]
-                y_original = original_embeds_np[sorted_tokens[j]]
-                cos_sims_trained.append(
-                    np.dot(x_trained, y_trained)
-                    / (np.linalg.norm(x_trained) * np.linalg.norm(y_trained))
-                )
-                cos_sims_original.append(
-                    np.dot(x_original, y_original)
-                    / (np.linalg.norm(x_original) * np.linalg.norm(y_original))
-                )
-    with open(os.path.join(log_dir, "w2v_similarity.txt"), "w") as f:
-        f.write("trained_embeds: {}\n".format(np.mean(cos_sims_trained)))
-        f.write("original_embeds: {}\n".format(np.mean(cos_sims_original)))
+                x = original_embeds_np[sorted_tokens[i]]
+                y = original_embeds_np[sorted_tokens[j]]
+                w2v_sim = np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
+                cos_sims_factor.append(w2v_sim)
+                cos_sims_all.append(w2v_sim)
+        with open(os.path.join(log_dir, "w2v_similarity.txt"), "a") as f:
+            f.write("factor {}: {}\n".format(factor, np.mean(cos_sims_factor)))
+    with open(os.path.join(log_dir, "w2v_similarity.txt"), "a") as f:
+        f.write("overall w2v cosine similarity: {}\n".format(np.mean(cos_sims_all)))
 
 
 if __name__ == "__main__":

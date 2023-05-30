@@ -35,6 +35,7 @@ for n_factor in 6 8 10 12; do
                 --n_factor=${n_factor} \
                 --n_word=64 \
                 --window_size=5 \
+                --strategy="all" \
                 --batch_size=1024 \
                 --least_act_num=20 \
                 --k=10 \
