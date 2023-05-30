@@ -98,7 +98,7 @@ def main():
                 # [n_words,]
                 review_tokens = text_reviews[review_idx].detach().cpu().numpy()
                 assert review_acts.shape == review_tokens.shape
-                # note that act_idx == token_idx
+                # note that act_idx == token_idx (padding="same" in conv)
                 for act_idx in range(review_tokens.shape[0]):
                     act_val = review_acts[act_idx]
                     act_tokens = []
