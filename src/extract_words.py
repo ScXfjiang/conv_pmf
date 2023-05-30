@@ -94,33 +94,26 @@ def main():
             # for each review
             for review_idx in range(args.batch_size):
                 # [n_words,]
-                review_acts = activations[factor][review_idx]
-                # calculate entropy
-                prob_dist = torch.nn.functional.softmax(review_acts, dim=0)
-                entropy = -torch.sum(prob_dist * torch.log2(prob_dist))
-                # only condiser text reviews with small entropy
-                if entropy <= args.entropy_threshold:
-                    # [n_words,]
-                    review_acts = review_acts.detach().cpu().numpy()
-                    # [n_words,]
-                    review_tokens = text_reviews[review_idx].detach().cpu().numpy()
-                    assert review_acts.shape == review_tokens.shape
-                    # note that act_idx == token_idx
-                    for act_idx in range(review_tokens.shape[0]):
-                        act_val = review_acts[act_idx]
-                        act_tokens = []
-                        act_tokens.append(review_tokens[act_idx])
-                        for offset in range(1, (args.window_size - 1) // 2 + 1):
-                            if act_idx - offset >= 0:
-                                act_tokens.append(review_tokens[act_idx - offset])
-                            if act_idx + offset < review_tokens.shape[0]:
-                                act_tokens.append(review_tokens[act_idx + offset])
-                        for token in act_tokens:
-                            if token in token2act_stat:
-                                token2act_stat[token][0] += act_val
-                                token2act_stat[token][1] += 1
-                            else:
-                                token2act_stat[token] = [act_val, 1]
+                review_acts = activations[factor][review_idx].detach().cpu().numpy()
+                # [n_words,]
+                review_tokens = text_reviews[review_idx].detach().cpu().numpy()
+                assert review_acts.shape == review_tokens.shape
+                # note that act_idx == token_idx
+                for act_idx in range(review_tokens.shape[0]):
+                    act_val = review_acts[act_idx]
+                    act_tokens = []
+                    act_tokens.append(review_tokens[act_idx])
+                    for offset in range(1, (args.window_size - 1) // 2 + 1):
+                        if act_idx - offset >= 0:
+                            act_tokens.append(review_tokens[act_idx - offset])
+                        if act_idx + offset < review_tokens.shape[0]:
+                            act_tokens.append(review_tokens[act_idx + offset])
+                    for token in act_tokens:
+                        if token in token2act_stat:
+                            token2act_stat[token][0] += act_val
+                            token2act_stat[token][1] += 1
+                        else:
+                            token2act_stat[token] = [act_val, 1]
             factor2token2act_stat[factor] = token2act_stat
     # 2. extract words ordered by average activation value
     # for each factor, we first extract top 50 words
@@ -128,10 +121,6 @@ def main():
     factor2sorted_tokens_50 = {}
     factor2sorted_words_50 = {}
     factor2sorted_act_values_50 = {}
-    # for topic kl divergence
-    act_dist = torch.zeros(
-        (args.n_factor, dictionary.vocab_size()), dtype=torch.float32, device="cuda",
-    )
     for factor, token2act_stat in factor2token2act_stat.items():
         tokens = []
         avg_act_values = []
@@ -142,8 +131,6 @@ def main():
                 continue
             tokens.append(token)
             avg_act_values.append(float(float(act_sum) / act_cnt))
-            # for topic kl divergence
-            act_dist[factor][token] = float(float(act_sum) / act_cnt)
         tokens = torch.tensor(tokens, dtype=torch.int32).to(device="cuda")
         avg_act_values = torch.tensor(avg_act_values, dtype=torch.float32).to(
             device="cuda"
@@ -181,7 +168,7 @@ def main():
             f.write("factor {}: {}\n".format(factor, factor2sorted_words[factor]))
             f.write("factor {}: {}\n".format(factor, factor2sorted_act_values[factor]))
 
-    # 3. word2vec similarity (trained_embeds)
+    # 3. word2vec similarity
     trained_embeds_np = trained_embeds.detach().cpu().numpy()
     original_embeds_np = original_embeds.embed_matrix()
     cos_sims_trained = []
