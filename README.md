@@ -73,3 +73,5 @@ Comparison of rating prediction accuracy (RMSE) between base models and ConvMF u
 | $12$        | 1.1722 |1.1661| **1.0778**| 1.0852| 1.0902| 1.0985| 1.10325|1.1117|
 
 Illustration of extracted topic keywords. Here, the total number of latent factors is fixed at 8. For each latent factor, we compute the word2vec cosine similarities, which are displayed at the top-left corner of each corresponding word cloud. The topics are sorted by this metric in descending order. Additionally, we calculate the average word2vec cosine similarities for all latent factors, yielding values of 0.2781 and 0.4270 respectively.
+<img width="1431" alt="keywords" src="https://github.com/ScXfjiang/conv_pmf/assets/13879402/7ef1fd22-1f10-4552-bc59-232eff3f5a5f">
+
