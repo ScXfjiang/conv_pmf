@@ -1,11 +1,12 @@
 # conv_pmf
 
-This repository is the implementation of [Enhancing Topic Extraction in Recommender Systems with Entropy Regularization](https://arxiv.org/abs/2306.07403).
+Welcome to the repository for the implementation of "[Enhancing Topic Extraction in Recommender Systems with Entropy Regularization](https://arxiv.org/abs/2306.07403)".
 
-## Reproduce process:
-1. Download Amazon Dataset: http://jmcauley.ucsd.edu/data/amazon/links.html. The statistics of all datasets are illustrated in this repo: https://github.com/ScXfjiang/dataset_insight. We suggest you use **Grocery and Gourmet Foods** as in the paper because it has reasonable number of users and items.
-2. Preprocess.
-```
+## Steps to Reproduce the Process:
+1. **Data Acquisition**: Download the Amazon Dataset from [here](http://jmcauley.ucsd.edu/data/amazon/links.html). This [repository](https://github.com/ScXfjiang/dataset_insight) provides statistics for all the datasets. We recommend using the **Grocery and Gourmet Foods** dataset for its reasonable number of users and items, as done in the paper.
+
+2. **Data Preprocessing**: Execute the following command.
+```bash
 python ../src/preprocess.py \
     --src=${ORIGINAL_DATASET_PATH} \
     --clean_corpus="T" \
@@ -13,8 +14,8 @@ python ../src/preprocess.py \
     --reference=${ORIGINAL_DATASET_PATH} \
     --word_embeds=${WORD_EMBEDDING_PATH}
 ```
-3. Training and Evaluation 
-```
+3. **Model Training and Evaluation**: Run the following command.
+```bash
 python ../src/run.py \
     --dataset_path="${DATA_PATH}" \
     --word_embeds_path=${WORD_EMBEDDING_PATH} \
@@ -38,8 +39,8 @@ python ../src/run.py \
     --log_dir="n_factor_${n_factor}" \
     --log_dir_level_2="${epsilon}"
 ```
-4. Extract Topic Keywords
-```
+4. **Topic Keyword Extraction**: Use the following command.
+```bash
 python ../src/extract_words.py \
     --dataset_path="${DATA_PATH}" \
     --word_embeds_path=${WORD_EMBEDDING_PATH} \
@@ -56,7 +57,9 @@ python ../src/extract_words.py \
 ```
 
 ## Experiment Results
-Comparison of topic coherence (word embedding cosine similarity) for different entropy regularization coefficients ($\lambda$ s), with $\lambda=0.0$ indicating the absence of entropy regularization terms. The highest-performing result is highlighted in bold.
+The experimental results presented in this section evaluate both topic coherence (based on word embedding cosine similarity) and rating prediction accuracy (root mean square error - RMSE). We vary entropy regularization coefficients ($\lambda$ s) for these comparisons, with $\lambda=0.0$ symbolizing no entropy regularization terms. The best-performing results are highlighted in bold.
+
+### Topic Coherence Comparison
 | $n$\_factor | $0.0$ | $0.4$ | $0.8$ | $1.2$ | $1.6$ | $2.0$ |
 |-------------|-------|-------|-------|-------|-------|-------|
 | $6$         | 0.2850| 0.2932| 0.3508| 0.3863| 0.4043| **0.4161**|
@@ -64,7 +67,7 @@ Comparison of topic coherence (word embedding cosine similarity) for different e
 | $10$        | 0.2634| 0.283 | 0.3132| 0.3582| 0.3743| **0.3982**|
 | $12$        | 0.2424| 0.2804| 0.2937| 0.3599| 0.3722| **0.3808**|
 
-Comparison of rating prediction accuracy (RMSE) between base models and ConvMF under different entropy regularization coefficients ($\lambda$ s), with $\lambda=0.0$ indicating the absence of entropy regularization terms. The highest-performing result is highlighted in bold.
+### RMSE Comparison
 | $n$\_factor | Offset | PMF | $0.0$ | $0.4$ | $0.8$ | $1.2$ | $1.6$ | $2.0$ |
 |-------------|--------|-----|-------|-------|-------|-------|-------|-------|
 | $6$         | 1.1722 |1.1467| **1.0632**| 1.0765| 1.0920| 1.0927| 1.0927| 1.0940|
@@ -72,6 +75,6 @@ Comparison of rating prediction accuracy (RMSE) between base models and ConvMF u
 | $10$        | 1.1722 |1.1607| **1.0735**| 1.0805| 1.0895| 1.0945| 1.0985| 1.1010|
 | $12$        | 1.1722 |1.1661| **1.0778**| 1.0852| 1.0902| 1.0985| 1.10325|1.1117|
 
-Illustration of extracted topic keywords. Here, the total number of latent factors is fixed at 8. For each latent factor, we compute the word2vec cosine similarities, which are displayed at the top-left corner of each corresponding word cloud. The topics are sorted by this metric in descending order. Additionally, we calculate the average word2vec cosine similarities for all latent factors, yielding values of 0.2781 and 0.4270 respectively.
+In the example below, the total count of latent factors is set at 8. For each latent factor, we compute the word2vec cosine similarities, which are depicted at the top-left corner of each corresponding word cloud. These topics are arranged in descending order based on the cosine similarity. We also compute the average word2vec cosine similarities for all latent factors, yielding values of 0.2781 and 0.4270 respectively.
 <img width="1431" alt="keywords" src="https://github.com/ScXfjiang/conv_pmf/assets/13879402/7ef1fd22-1f10-4552-bc59-232eff3f5a5f">
 
