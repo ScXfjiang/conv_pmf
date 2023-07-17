@@ -37,7 +37,7 @@ def gen_sparse_token_cnt_mat(ref_corpus, dictionary):
 class NPMIUtil:
     def __init__(self, token_cnt_mat):
         # sparse matrix: [num_doc, voc_size]
-        self.token_cnt_mat = token_cnt_mat.tocsc()
+        self.token_bool_mat = token_cnt_mat.tocsc().astype('bool')
 
     def compute_npmi(self, factor2sorted_topics):
         """
@@ -60,8 +60,8 @@ class NPMIUtil:
                         if ij in npmi_cache:
                             npmi = npmi_cache[ij]
                         else:
-                            col_i = self.token_cnt_mat[:, topic_i]
-                            col_j = self.token_cnt_mat[:, topic_j]
+                            col_i = self.token_bool_mat[:, topic_i]
+                            col_j = self.token_bool_mat[:, topic_j]
                             # count of topic_i
                             c_i = col_i.sum()
                             # count of topic_j
@@ -71,7 +71,7 @@ class NPMIUtil:
                             if c_ij == 0:
                                 npmi = 0.0
                             else:
-                                num_doc = self.token_cnt_mat.shape[0]
+                                num_doc = self.token_bool_mat.shape[0]
                                 npmi = (
                                     np.log2(num_doc)
                                     + np.log2(c_ij)
