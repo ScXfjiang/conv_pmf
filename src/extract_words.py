@@ -5,12 +5,14 @@ import os
 
 import torch
 import numpy as np
+import scipy.sparse
 import uuid
 
 from extract_words.model import ExtractWords
 from extract_words.dataset import EWAmazon
 from common.dictionary import GloveDict6B
 from common.word_embeds import GloveEmbeds
+from common.topic_util import NPMIUtil
 
 
 def main():
@@ -208,6 +210,12 @@ def main():
             f.write("factor {}: {}\n".format(factor, np.mean(cos_sims_factor)))
     with open(os.path.join(log_dir, "w2v_similarity.txt"), "a") as f:
         f.write("overall w2v cosine similarity: {}\n".format(np.mean(cos_sims_all)))
+    
+    # 4. NPMI (Normalized (Pointwise) Mutual Information)
+    token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
+    npmi_util = NPMIUtil(token_cnt_mat)
+    factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
+    avg_npmi = np.mean(list(factor2npmi.values()))
 
 
 if __name__ == "__main__":

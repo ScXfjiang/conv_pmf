@@ -6,21 +6,25 @@ from scipy.sparse import lil_matrix
 from common.dictionary import DictionaryIf
 
 
-def gen_sparse_token_cnt_mat(dataset_path, dictionary):
+def gen_sparse_token_cnt_mat(ref_corpus, dictionary):
     """
+    Create sparse token count matrix.
+    rows - documents
+    cols - tokens
+
     Args:
-        dataset_path (str): Amazon dataset
+        ref_corpus (str): reference corpus
         dictionary (dictionary.DictionaryIf):
     """
     assert isinstance(dictionary, DictionaryIf)
 
-    with open(dataset_path, "rb") as f:
+    with open(ref_corpus, "rb") as f:
         num_doc = len(f.readlines())
         voc_size = dictionary.vocab_size()
         token_cnt_mat = lil_matrix((num_doc, voc_size), dtype=np.int32)
         f.seek(0)
         for doc_idx, line in enumerate(f):
-            tokens = nltk.word_tokenize(str(json.loads(line)["reviewText"]))
+            tokens = nltk.word_tokenize(str(json.loads(line)["tokenized_text"]))
             for token in tokens:
                 token_idx = dictionary.word2idx(token)
                 token_cnt_mat[doc_idx, token_idx] += 1
