@@ -24,6 +24,8 @@ def gen_sparse_token_cnt_mat(ref_corpus, dictionary):
         token_cnt_mat = lil_matrix((num_doc, voc_size), dtype=np.int32)
         f.seek(0)
         for doc_idx, line in enumerate(f):
+            if doc_idx % 1000 == 0:
+                print("doc_idx: {}/{}".format(doc_idx, num_doc))
             tokens = nltk.word_tokenize(str(json.loads(line)["tokenized_text"]))
             for token in tokens:
                 token_idx = dictionary.word2idx(token)
