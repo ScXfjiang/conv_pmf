@@ -32,7 +32,7 @@ for n_factor in 6 8 10 12; do
                 --dataset_path="${DATA_PATH}" \
                 --word_embeds_path="/scratch/22200056/dataset/glove.6B/glove.6B.50d.txt" \
                 --checkpoint_path="${checkpoint}" \
-                --ref_token_cnt_mat="/scratch/22200056/dataset/wikitext/train_token_cnt_mat.npz" \
+                --ref_token_cnt_mat="/scratch/22200056/dataset/wikitext/full_token_cnt_mat.npz" \
                 --n_factor=${n_factor} \
                 --n_word=64 \
                 --window_size=5 \
