@@ -212,7 +212,7 @@ def main():
             f.write("factor {}: {}\n".format(factor, np.mean(cos_sims_factor)))
     with open(os.path.join(log_dir, "w2v_similarity.txt"), "a") as f:
         f.write("overall w2v cosine similarity: {}\n".format(np.mean(cos_sims_all)))
-    
+
     # 4. NPMI (Normalized (Pointwise) Mutual Information)
     ref_token_cnt_mat = scipy.sparse.load_npz(args.ref_token_cnt_mat)
     npmi_util = NPMIUtil(ref_token_cnt_mat)
@@ -220,9 +220,8 @@ def main():
     for factor, npmi in factor2npmi.items():
         with open(os.path.join(log_dir, "npmi.txt"), "a") as f:
             f.write("factor {}: {}\n".format(factor, npmi))
-    avg_npmi = np.mean(list(factor2npmi.values()))
     with open(os.path.join(log_dir, "npmi.txt"), "a") as f:
-        f.write("overall NPMI: {}\n".format(avg_npmi))
+        f.write("overall NPMI: {}\n".format(np.mean(list(factor2npmi.values()))))
 
 
 if __name__ == "__main__":
