@@ -30,6 +30,7 @@ def main():
     parser.add_argument("--entropy_threshold", type=float, default=float("inf"))
     parser.add_argument("--least_act_num", default=50, type=int)
     parser.add_argument("--k", default=10, type=int)
+    parser.add_argument("--ref_token_cnt_mat", default="", type=str)
     # log args
     parser.add_argument("--log_dir_level_1", default="", type=str)
     parser.add_argument("--log_dir_level_2", default="", type=str)
@@ -62,6 +63,7 @@ def main():
         f.write("batch_size: {}\n".format(args.batch_size))
         f.write("entropy_threshold: {}\n".format(args.entropy_threshold))
         f.write("least_act_num: {}\n".format(args.least_act_num))
+        f.write("ref_token_cnt_mat: {}\n".format(args.ref_token_cnt_mat))
         f.write("k: {}\n".format(args.k))
 
     # initialize dictionary
@@ -212,10 +214,15 @@ def main():
         f.write("overall w2v cosine similarity: {}\n".format(np.mean(cos_sims_all)))
     
     # 4. NPMI (Normalized (Pointwise) Mutual Information)
-    token_cnt_mat = scipy.sparse.load_npz(self.ew_args["ew_token_cnt_mat_path"])
-    npmi_util = NPMIUtil(token_cnt_mat)
+    ref_token_cnt_mat = scipy.sparse.load_npz(args.ref_token_cnt_mat)
+    npmi_util = NPMIUtil(ref_token_cnt_mat)
     factor2npmi = npmi_util.compute_npmi(factor2sorted_tokens)
+    for factor, npmi in factor2npmi.items():
+        with open(os.path.join(log_dir, "npmi.txt"), "a") as f:
+            f.write("factor {}: {}\n".format(factor, npmi))
     avg_npmi = np.mean(list(factor2npmi.values()))
+    with open(os.path.join(log_dir, "npmi.txt"), "a") as f:
+        f.write("overall NPMI: {}\n".format(avg_npmi))
 
 
 if __name__ == "__main__":
