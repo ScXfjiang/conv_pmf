@@ -57,7 +57,7 @@ python ../src/extract_words.py \
 ```
 
 ## Experiment Results
-The experimental results presented in this section evaluate both topic coherence (based on word embedding cosine similarity) and rating prediction accuracy (root mean square error - RMSE). We vary entropy regularization coefficients ($\lambda$ s) for these comparisons, with $\lambda=0.0$ symbolizing no entropy regularization terms. The best-performing results are highlighted in bold.
+The experimental results presented in this section evaluate both topic coherence (based on NPMI and word embedding cosine similarity) and rating prediction accuracy (root mean square error - RMSE). We vary entropy regularization coefficients ($\lambda$ s) for these comparisons, with $\lambda=0.0$ symbolizing no entropy regularization terms. The best-performing results are highlighted in bold.
 
 ### Topic Coherence Comparison
 #### NPMI
