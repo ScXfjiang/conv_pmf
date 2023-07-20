@@ -28,7 +28,7 @@ class ConvPMF(nn.Module):
         self.softmax_last_dim = nn.Softmax(dim=-1)
         self.bias = nn.parameter.Parameter(torch.empty((1,)), requires_grad=True)
         self.entropy_coeff = nn.parameter.Parameter(
-            torch.empty((n_factor,)), requires_grad=True
+            torch.empty((n_factor, 1)), requires_grad=True
         )
         self.rating_mean = rating_mean
         self.rating_std = rating_std
