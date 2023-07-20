@@ -39,7 +39,7 @@ class ConvPMF(nn.Module):
         nn.init.uniform_(self.conv1d.weight, a=-1.0, b=1.0)
         self.bias = torch.nn.Parameter(torch.tensor(self.rating_mean))
         self.entropy_coeff = torch.nn.Parameter(
-            torch.ones((self.n_factor), dtype=torch.float32)
+            torch.ones((self.n_factor, 1), dtype=torch.float32)
         )
 
     def forward(self, user_indices, docs, with_entropy=True):
@@ -91,7 +91,7 @@ class ConvPMF(nn.Module):
                 entropy = -torch.sum(
                     prob_dist * torch.log2(prob_dist), dim=-1, keepdim=False
                 )
-                entropy = entropy * (self.entropy_coeff.expand_dims(-1))
+                entropy = entropy * self.entropy_coeff
                 # 1. total entropy w.r.t. all factors
                 total_entropy += torch.sum(entropy)
                 total_entropy_num += entropy.shape[0] * entropy.shape[1]
