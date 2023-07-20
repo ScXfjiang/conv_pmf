@@ -91,7 +91,7 @@ class ConvPMF(nn.Module):
                 entropy = -torch.sum(
                     prob_dist * torch.log2(prob_dist), dim=-1, keepdim=False
                 )
-                entropy = entropy * (self.entropy_coeff.expand_as(entropy))
+                entropy = entropy * (self.entropy_coeff.expand_dims(-1))
                 # 1. total entropy w.r.t. all factors
                 total_entropy += torch.sum(entropy)
                 total_entropy_num += entropy.shape[0] * entropy.shape[1]
